@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S-MAP Chiang Mai (Smart Movement & Awareness Platform)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* 🟢 แก้ไข CSS โครงสร้างให้เต็มจอ 100% และไม่ชิดซ้าย 🟢 */
+    * { box-sizing: border-box; }
+    body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh; }
+    .wrapper { display: flex; width: 100%; flex: 1; align-items: stretch; }
+    .sidebar { width: 260px; min-width: 260px; background: white; border-right: 1px solid #e9ecef; transition: all 0.3s; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 1000; flex-shrink: 0; }
+    .main-content { flex: 1; min-width: 0; width: 100%; padding: 25px; background-color: #f0f2f5; display: flex; flex-direction: column; }
+    .content-section { width: 100%; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #fff; }
+    
+    /* 🟢 ปรับขนาด Infographic ให้ใหญ่และยาวขึ้น 🟢 */
+    .carousel-item { background-color: #1a1d20; height: 80vh; min-height: 600px; border-radius: 8px; overflow: hidden; }
+    .carousel-item img { width: 100%; height: 100%; object-fit: contain; margin: 0 auto; display: block; }
+    @media (max-width: 768px) { .carousel-item { height: 60vh; min-height: 400px; } .main-content{ padding: 15px; } .content-section{ padding: 20px; } }
+
+    /* LOADER */
+    #globalLoader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
+    .loader-content { text-align: center; }
+    .loader-spinner { width: 60px; height: 60px; margin: 0 auto 20px; border: 6px solid #f3f3f3; border-top: 6px solid #0d6efd; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* HEADER */
+    .main-header { background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Doi_Suthep_02.jpg/1200px-Doi_Suthep_02.jpg') center center/cover no-repeat; color: white; position: relative; padding: 0; height: auto; min-height: 250px; display: flex; align-items: center; width: 100%; }
+    .header-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(13, 110, 253, 0.92) 0%, rgba(0, 50, 133, 0.85) 100%); z-index: 1; }
+    .header-content { position: relative; z-index: 2; width: 100%; padding: 40px; display: flex; align-items: center; justify-content: center; }
+    .header-icon-box { margin-right: 30px; }
+    .org-title-group { display: flex; flex-direction: column; justify-content: center; }
+    .org-top-text { font-weight: 400; font-size: 1.4rem; letter-spacing: 1px; color: #ffeb3b; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .org-main-text { font-weight: 700; line-height: 1.3; text-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 2.2rem; }
+    .eng-subtitle { font-weight: 300; opacity: 0.9; font-size: 1rem; margin-top: 5px; letter-spacing: 0.5px; }
+    .sidebar-toggle-btn { position: absolute; top: 30px; left: 30px; z-index: 1001; color: white; border-radius: 8px; cursor: pointer; padding: 5px 10px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background-color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); }
+    @media (max-width: 992px) { .main-header { min-height: auto; } .header-content { flex-direction: column; text-align: center; padding: 70px 20px 40px 20px; gap: 15px; } .header-icon-box { margin-right: 0 !important; margin-bottom: 10px; } .org-top-text { font-size: 1.1rem; } .org-main-text { font-size: 1.5rem; line-height: 1.4; } .eng-subtitle { font-size: 0.85rem; margin-top: 5px; display: block; } .sidebar-toggle-btn { top: 20px !important; left: 20px !important; background-color: transparent !important; border: 2px solid rgba(255,255,255,0.7) !important; box-shadow: none !important; } .sidebar { position: fixed; left: 0; top: 0; margin-left: -260px; box-shadow: 4px 0 10px rgba(0,0,0,0.1); } .sidebar.active { margin-left: 0; } .overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 998; opacity: 0; transition: all 0.3s; } .overlay.active { display: block; opacity: 1; } }
+
+    .nav-link-main { padding: 15px 25px; color: #0d6efd; font-weight: 700; cursor: pointer; display: block; text-decoration: none; border-bottom: 1px solid #f8f9fa; transition: 0.2s; font-size: 1rem; }
+    .nav-link-main:hover { background-color: #f1f8ff; color: #0a58ca; padding-left: 30px; }
+    .nav-link-main.active { background-color: #e7f1ff; border-left: 5px solid #0d6efd; color: #0d6efd; }
+    .nav-link-sub { padding: 10px 25px 10px 50px; color: #6c757d; cursor: pointer; display: block; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+    .nav-link-sub:hover { color: #0d6efd; background-color: #f8f9fa; transform: translateX(5px); }
+    .section-header { padding-bottom: 10px; margin-bottom: 20px; color: #0d6efd; font-weight: 700; font-size: 1.4rem; border-bottom: 2px solid #f0f0f0; }
+
+    .main-footer { background-color: #1a1d20; color: #cfd2d6; padding: 60px 40px; margin-top: auto; border-top: 5px solid #0d6efd; width: 100%; flex-shrink: 0; }
+    .footer-title { color: white; font-weight: 700; margin-bottom: 20px; border-left: 4px solid #0d6efd; padding-left: 10px; }
+    .admin-link-container { margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .admin-trigger { color: #6c757d; font-size: 0.8rem; text-decoration: none; transition: 0.3s; cursor: pointer; display: inline-block; }
+    .admin-trigger:hover { color: #adb5bd; text-decoration: underline; }
+
+    .banner-btn { display: flex; align-items: center; justify-content: flex-start; padding: 20px; margin-bottom: 20px; border-radius: 15px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; overflow: hidden; border: none; width: 100%; text-align: left; background-size: cover !important; background-position: center !important; }
+    .banner-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); color: white; }
+    .banner-icon { flex: 0 0 100px; width: 100px; height: 100px; border-radius: 50%; font-size: 4rem; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; margin-right: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .banner-text { flex-grow: 1; position: relative; z-index: 2; overflow: hidden; }
+    .banner-title { font-weight: 800; font-size: clamp(1.2rem, 2vw, 1.6rem); margin-bottom: 5px; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .banner-desc { font-size: 1rem; opacity: 0.95; font-weight: 400; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .status-badge, .date-badge { font-size: 0.85rem; padding: 4px 10px; border-radius: 20px; display: inline-block; margin-top: 5px; }
+    .status-badge { font-weight: bold; background: white; color: #d63031; margin-right: 5px; }
+    .date-badge { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.5); }
+    .banner-btn.closed { filter: grayscale(100%); opacity: 0.7; background: #636e72 !important; cursor: not-allowed; pointer-events: none; }
+    .new-badge { position: absolute; top: 0; left: 0; background: #ff0000; color: white; font-size: 0.75rem; font-weight: bold; padding: 5px 15px; border-bottom-right-radius: 10px; z-index: 10; display: none; }
+    .bg-gradient-pink { background: linear-gradient(135deg, #ff7eb3 0%, #ff758c 100%); }
+    .bg-gradient-yellow { background: linear-gradient(135deg, #fce38a 0%, #f38181 100%); color: #4a4a4a !important; }
+    .badge-custom-new { display: inline-block; background-color: transparent; color: #FFD700; -webkit-text-stroke: 0.8px #ffb300; text-shadow: 1px 1px 0px #ffff00, -1px -1px 0px #ffff00, 1px -1px 0px #ffff00, -1px 1px 0px #ffff00; font-weight: 900; font-size: 0.8rem; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 20px; border: 2px solid #ff0000; animation: pulse-red-border 1.2s infinite; }
+    @keyframes pulse-red-border { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.8); } 70% { box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); } }
+    
+    .chat-container { height: 400px; overflow-y: auto; border: 1px solid #eee; background: #f8f9fa; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
+    .chat-user { align-self: flex-end; background-color: #0d6efd; color: white; border-bottom-right-radius: 2px; }
+    .chat-ai { align-self: flex-start; background-color: white; color: #333; border: 1px solid #e0e0e0; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .chat-ai strong { color: #0d6efd; }
+    
+    .video-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; transition: transform 0.2s; border: 1px solid #eee; }
+    .video-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+    .video-title-bar { padding: 12px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: #333; font-size: 0.95rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    
+    .dash-card { border-left: 5px solid; transition: transform 0.2s; }
+    .dash-card:hover { transform: translateY(-3px); }
+    .dash-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+    .dash-num { font-size: 2rem; font-weight: bold; line-height: 1.2; }
+    .floating-menu-btn { position: fixed; bottom: 30px; right: 20px; width: 55px; height: 55px; background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; border-radius: 50%; border: none; box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4); display: flex; align-items: center; justify-content: center; z-index: 997; cursor: pointer; transition: all 0.3s ease; }
+    .star-rating i { font-size: 2.5rem; color: #ccc; cursor: pointer; transition: color 0.2s; }
+    .star-rating i.hover { color: #f1c40f; opacity: 0.5; }
+    .star-rating i.active { color: #f39c12; }
+  </style>
+</head>
+<body onload="initSystem()">
+
+  <div id="globalLoader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <h5 class="text-primary fw-bold">แพลตฟอร์ม S-MAP Chiang Mai</h5>
+      <div class="text-muted small">กำลังเชื่อมต่อข้อมูลล่าสุด...</div>
+    </div>
+  </div>
+
+  <script>
+    // 🚨 สำคัญมาก: ใส่ Web App URL ที่ Deploy แล้วตรงนี้ 🚨
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZOkyVCexqmX3kMSQ-0yHWWERP6zVU8zC0ZGW8BatUY_PvPA7HtrjQZXRA0iHVWLgwKg/exec"; 
+  </script>
+
+  <header class="main-header container-fluid">
+    <div class="header-overlay"></div>
+    <div class="header-content">
+      <button class="sidebar-toggle-btn d-lg-none me-3" onclick="toggleSidebar()"><i class="material-icons">menu</i></button>
+      <div class="header-icon-box d-none d-lg-block"><i class="material-icons" style="font-size: 5.5rem;">account_balance</i></div> 
+      <div class="header-icon-box d-block d-lg-none"><i class="material-icons" style="font-size: 4.5rem;">account_balance</i></div> 
+      <div class="org-title-group">
+        <div class="org-top-text">สำนักงานจังหวัดเชียงใหม่</div>
+        <h1 class="m-0 org-main-text">กลุ่มงานยุทธศาสตร์และข้อมูลเพื่อการพัฒนาจังหวัด</h1>
+        <div class="eng-subtitle">Strategy and Information for Provincial Development</div>
+      </div>
+    </div>
+  </header>
+
+  <button class="floating-menu-btn d-lg-none" onclick="toggleSidebar()"><i class="material-icons">menu</i></button>
+
+  <div class="wrapper">
+    <div class="overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <nav class="sidebar" id="sidebar">
+      <div class="flex-grow-1 pt-4">
+        <h6 class="px-3 text-secondary fw-bold mt-2 mb-3" style="font-size: 0.85rem; letter-spacing: 1px;">MENU</h6>
+        <a class="nav-link-main active" id="menu-home" onclick="showPage('home')">🏠 หน้าหลัก</a>
+        <div id="sub-home" class="mb-2">
+          <a class="nav-link-sub" onclick="scrollToId('section-video')">วิดีโอแนะนำ</a>
+          <a class="nav-link-sub" onclick="scrollToId('sec-feedback')">รับฟังความคิดเห็น</a>
+          <a class="nav-link-sub" onclick="scrollToId('sec-dash')">📍Dashboard</a>
+          <a class="nav-link-sub" onclick="scrollToId('sec-pr')">สื่อประชาสัมพันธ์</a>
+          <a class="nav-link-sub" onclick="scrollToId('sec-facebook')">ข่าวประชาสัมพันธ์</a>
+        </div>
+        <a class="nav-link-main" id="menu-videos" onclick="showPage('videos')">▶️ คลังวิดีโอแนะนำ</a>
+        <a class="nav-link-main" id="menu-docs" onclick="showPage('docs')">📂 เอกสาร/ข้อมูล</a>
+        <a class="nav-link-main" id="menu-calendar" onclick="showPage('calendar')">📅 ปฏิทินกิจกรรมจังหวัด</a>
+        <a class="nav-link-main" id="menu-qa" onclick="showPage('qa')">❓ ถาม-ตอบ (Q&A)</a>
+
+        <div id="adminMenuSection" style="display:none; width: 100%;">
+            <hr class="mx-3 text-secondary">
+            <h6 class="px-3 text-secondary fw-bold mt-3 mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">ADMINISTRATOR</h6>
+            <div class="px-3 mb-3 w-100">
+                <button class="btn btn-danger w-100 text-center fw-bold shadow-sm d-flex align-items-center justify-content-center" onclick="showPage('admin-dash')" style="border-radius: 8px; padding: 10px;">
+                    <i class="material-icons me-2">analytics</i> สรุปผลข้อมูล
+                </button>
+            </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      
+      <div id="page-home">
+        
+        <div id="section-video" class="content-section text-center">
+          <h3 class="section-header" id="disp_video_title">📺 วิดีโอแนะนำความสำคัญของแผนพัฒนาจังหวัด</h3>
+          <div class="ratio ratio-16x9 w-100 mx-auto shadow rounded overflow-hidden">
+            <iframe id="main_video_frame" src="" allowfullscreen></iframe>
+          </div>
+        </div>
+
+        <div id="adminHomePanel" class="content-section bg-warning-subtle border-warning" style="display:none;">
+          <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning pb-2">
+             <h5 class="fw-bold text-dark m-0"><i class="material-icons align-middle text-success">verified_user</i> ยินดีต้อนรับผู้ดูแลระบบ</h5>
+             <button class="btn btn-sm btn-danger fw-bold" onclick="logoutSystem()"><i class="material-icons align-middle fs-6">logout</i> ออกจากระบบ</button>
+          </div>
+          
+          <div class="mt-3 bg-white p-3 rounded shadow-sm border-start border-4 border-danger">
+             <h6 class="fw-bold text-danger mb-3">ตั้งค่า: ฟอร์มรับแจ้งปัญหา (กล่องสีชมพู)</h6>
+             <div class="row">
+                 <div class="col-md-6 mb-2"><label class="small text-muted">ชื่อหัวข้อ:</label><input type="text" id="admin_title_1" class="form-control form-control-sm"></div>
+                 <div class="col-md-6 mb-2"><label class="small text-muted">คำอธิบาย (Subtitle):</label><input type="text" id="admin_subtitle_1" class="form-control form-control-sm"></div>
+                 <div class="col-md-6 mb-2"><label class="small text-muted">ช่วงวันที่:</label><input type="text" id="admin_date_1" class="form-control form-control-sm"></div>
+                 <div class="col-md-6 mb-2 d-flex align-items-end"><div class="form-check form-switch bg-light p-2 rounded w-100 border"><label class="form-check-label fw-bold">สถานะเปิดรับ</label><input class="form-check-input fs-5 float-end" type="checkbox" id="swForm1"></div></div>
+             </div>
+             <div class="mt-3 mb-2 p-2 border border-danger border-opacity-25 rounded bg-light">
+                 <label class="small fw-bold text-danger mb-2">ตั้งค่าตัวเลือกหมวดหมู่ปัญหา (สูงสุด 8 ช่อง):</label>
+                 <div class="row g-2">
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_1" class="form-control form-control-sm" placeholder="หมวดหมู่ 1"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_2" class="form-control form-control-sm" placeholder="หมวดหมู่ 2"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_3" class="form-control form-control-sm" placeholder="หมวดหมู่ 3"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_4" class="form-control form-control-sm" placeholder="หมวดหมู่ 4"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_5" class="form-control form-control-sm" placeholder="หมวดหมู่ 5"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_6" class="form-control form-control-sm" placeholder="หมวดหมู่ 6"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_7" class="form-control form-control-sm" placeholder="หมวดหมู่ 7"></div>
+                     <div class="col-md-3"><input type="text" id="h_admin_f1_opt_8" class="form-control form-control-sm" placeholder="หมวดหมู่ 8"></div>
+                 </div>
+             </div>
+             <button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="saveFormConfig()">บันทึกการตั้งค่าฟอร์ม 1</button>
+          </div>
+
+          <div class="mt-3 bg-white p-3 rounded shadow-sm border-start border-4 border-warning">
+             <h6 class="fw-bold text-warning text-dark mb-3">ตั้งค่า: ระบบรับฟังความคิดเห็นแบบมีส่วนร่วม (กล่องสีเหลือง)</h6>
+             <div class="mb-3 p-2 bg-warning bg-opacity-10 border border-warning rounded"><label class="small text-dark fw-bold">ชื่อแผนพัฒนาที่รับฟังความเห็น:</label><input type="text" id="h_admin_plan_name" class="form-control" placeholder="เช่น แผนพัฒนาจังหวัดเชียงใหม่ พ.ศ. 2566 - 2570"></div>
+             <div class="row bg-light p-2 rounded mb-3 border">
+                 <div class="col-md-6 mb-2"><label class="small text-muted fw-bold">ชื่อหัวข้อบนกล่องหน้าหลัก:</label><input type="text" id="h_admin_title" class="form-control form-control-sm"></div>
+                 <div class="col-md-6 mb-2"><label class="small text-muted fw-bold">คำอธิบาย (Subtitle):</label><input type="text" id="h_admin_desc" class="form-control form-control-sm"></div>
+                 <div class="col-md-6 mb-2"><label class="small text-muted fw-bold">ช่วงเวลาดำเนินการ:</label><input type="text" id="h_admin_date" class="form-control form-control-sm"></div>
+                 <div class="col-md-6 mb-2 d-flex gap-2">
+                     <div class="form-check form-switch w-50 p-2 border rounded bg-white"><label class="form-check-label small">สถานะเปิดรับ</label><input class="form-check-input float-end" type="checkbox" id="swHearingStatus"></div>
+                     <div class="form-check form-switch w-50 p-2 border rounded bg-white"><label class="form-check-label small">เปิดให้ดาวท้ายฟอร์ม</label><input class="form-check-input float-end" type="checkbox" id="swHearingRating"></div>
+                 </div>
+             </div>
+             
+             <div class="mb-3 p-2 border rounded border-primary border-opacity-25 bg-white">
+                 <label class="fw-bold text-primary small mb-2">ข้อมูลชี้แจงและระบบขอความยินยอม (PDPA)</label>
+                 <div class="input-group input-group-sm mb-2"><span class="input-group-text bg-light">ภาพเงื่อนไข</span><input type="text" class="form-control" id="h_admin_img" placeholder="URL รูปภาพแบนเนอร์ (ถ้ามี)"></div>
+                 <div class="mb-2"><input type="text" class="form-control form-control-sm" id="h_admin_info_title" placeholder="หัวเรื่อง (เช่น หลักการและเหตุผล / สาระสำคัญ)"></div>
+                 <div class="mb-2"><textarea class="form-control form-control-sm" id="h_admin_info_desc" rows="3" placeholder="พิมพ์รายละเอียดเพื่อชี้แจงประชาชน..."></textarea></div>
+                 <div class="input-group input-group-sm mb-2"><span class="input-group-text bg-light">ลิงก์สรุปย่อ</span><input type="text" class="form-control" id="h_admin_sum" placeholder="URL เอกสารสรุป"></div>
+                 <div class="input-group input-group-sm mb-2"><span class="input-group-text bg-light">ลิงก์แผนเต็ม</span><input type="text" class="form-control" id="h_admin_full" placeholder="URL ร่างแผนฉบับสมบูรณ์"></div>
+                 <div class="mt-2 pt-2 border-top"><label class="small text-danger fw-bold">ข้อความยืนยันการอ่านแผน:</label><input type="text" class="form-control form-control-sm" id="h_admin_consent_text" placeholder="ข้าพเจ้าได้อ่านและทำความเข้าใจรายละเอียดและเอกสารร่างแผนฯ เบื้องต้นแล้ว"></div>
+                 <div class="mt-3 pt-3 border-top">
+                     <label class="small fw-bold text-danger mb-2">🛡️ ระบบข้อความนโยบาย PDPA ก่อนเข้าฟอร์ม:</label>
+                     <div class="form-check"><input class="form-check-input" type="radio" name="admin_pdpa_mode" id="pdpaAuto" value="AUTO" onchange="togglePdpaMode()" checked><label class="form-check-label small fw-bold">อัตโนมัติ (อ้างอิง พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล 2562 และประกาศจังหวัด)</label></div>
+                     <div class="form-check mb-2"><input class="form-check-input" type="radio" name="admin_pdpa_mode" id="pdpaCustom" value="CUSTOM" onchange="togglePdpaMode()"><label class="form-check-label small fw-bold">กำหนดข้อความเอง</label></div>
+                     <textarea class="form-control form-control-sm" id="h_admin_pdpa_custom_text" rows="6" style="display:none;" placeholder="พิมพ์ข้อความ PDPA แบบกำหนดเอง..."></textarea>
+                 </div>
+             </div>
+             
+             <div class="mb-3 p-2 border rounded border-success border-opacity-25 bg-white">
+                 <label class="fw-bold text-success small mb-2">ปรับแต่งหัวข้อแบบฟอร์ม</label>
+                 <div class="mb-1 p-2 bg-light border rounded">
+                     <input type="text" class="form-control form-control-sm fw-bold mb-2 text-primary" id="h_admin_q1" placeholder="หัวข้อส่วนที่ 1">
+                     <div class="row g-2 mb-2">
+                         <div class="col-md-4"><input type="text" class="form-control form-control-sm" id="h_admin_lbl_name" placeholder="ชื่อช่อง: ชื่อ-นามสกุล"></div>
+                         <div class="col-md-4"><input type="text" class="form-control form-control-sm" id="h_admin_lbl_district" placeholder="ชื่อช่อง: อำเภอที่อยู่อาศัย"></div>
+                         <div class="col-md-4"><input type="text" class="form-control form-control-sm" id="h_admin_lbl_sector" placeholder="ชื่อช่อง: ท่านสังกัดภาคส่วนใด"></div>
+                         <div class="col-md-4"><div class="form-check form-switch p-1 border rounded bg-white mt-1"><input class="form-check-input ms-2" type="checkbox" id="swReqIdCard"><label class="form-check-label small ms-1 fw-bold text-danger">บังคับกรอกบัตร ปชช.</label></div></div>
+                         <div class="col-md-8 mt-1"><input type="text" class="form-control form-control-sm" id="h_admin_lbl_idcard" placeholder="ชื่อช่อง: เลขประจำตัวประชาชน 13 หลัก"></div>
+                     </div>
+                     <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                         <label class="small fw-bold text-secondary">ตัวเลือกสำหรับช่องภาคส่วน (เว้นว่างไว้ถ้าไม่ใช้):</label>
+                         <div class="row g-1 mt-1">
+                             <div class="col-md-4"><input type="text" id="h_admin_sec_1" class="form-control form-control-sm" placeholder="ภาคส่วน 1"></div>
+                             <div class="col-md-4"><input type="text" id="h_admin_sec_2" class="form-control form-control-sm" placeholder="ภาคส่วน 2"></div>
+                             <div class="col-md-4"><input type="text" id="h_admin_sec_3" class="form-control form-control-sm" placeholder="ภาคส่วน 3"></div>
+                             <div class="col-md-4"><input type="text" id="h_admin_sec_4" class="form-control form-control-sm" placeholder="ภาคส่วน 4"></div>
+                             <div class="col-md-4"><input type="text" id="h_admin_sec_5" class="form-control form-control-sm" placeholder="ภาคส่วน 5"></div>
+                             <div class="col-md-4"><input type="text" id="h_admin_sec_6" class="form-control form-control-sm" placeholder="ภาคส่วน 6"></div>
+                         </div>
+                     </div>
+                 </div>
+                 
+                 <div class="mb-1 mt-3"><input type="text" class="form-control form-control-sm fw-bold text-primary" id="h_admin_q2" placeholder="หัวข้อส่วนที่ 2"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-secondary" id="h_admin_fb_ph_1" placeholder="คำอธิบายกล่องข้อเสนอแนะ ส่วนที่ 2"></div>
+                 
+                 <div class="mb-1 mt-3 d-flex align-items-center justify-content-between bg-light p-2 rounded border">
+                     <input type="text" class="form-control form-control-sm fw-bold text-primary w-50" id="h_admin_q3" placeholder="หัวข้อส่วนที่ 3">
+                     <div class="w-50 ps-2">
+                         <label class="small fw-bold text-dark me-2">ระดับตัวเลือก:</label>
+                         <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="admin_scale_type" id="scale2" value="2"><label class="form-check-label small" for="scale2">2 สเกล</label></div>
+                         <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="admin_scale_type" id="scale4" value="4"><label class="form-check-label small" for="scale4">4 สเกล</label></div>
+                         <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="admin_scale_type" id="scale5" value="5"><label class="form-check-label small" for="scale5">5 สเกล</label></div>
+                     </div>
+                 </div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-muted" id="h_admin_s3_1" placeholder="ประเด็นย่อย 1 (เช่น เศรษฐกิจ) *บังคับ*"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-muted" id="h_admin_s3_2" placeholder="ประเด็นย่อย 2 (เช่น สังคม) *บังคับ*"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-muted" id="h_admin_s3_3" placeholder="ประเด็นย่อย 3 (เช่น สิ่งแวดล้อม) *บังคับ*"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-muted" id="h_admin_s3_4" placeholder="ประเด็นย่อย 4 (เว้นว่างได้)"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-muted" id="h_admin_s3_5" placeholder="ประเด็นย่อย 5 (เว้นว่างได้)"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-muted" id="h_admin_s3_6" placeholder="ประเด็นย่อย 6 (เว้นว่างได้)"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-secondary" id="h_admin_fb_ph_2" placeholder="คำอธิบายกล่องข้อเสนอแนะ ส่วนที่ 3"></div>
+                 
+                 <div class="mb-1 mt-3"><input type="text" class="form-control form-control-sm fw-bold text-primary" id="h_admin_q4" placeholder="หัวข้อส่วนที่ 4"></div>
+                 <div class="ps-3 mb-1"><input type="text" class="form-control form-control-sm text-secondary" id="h_admin_p_ph" placeholder="คำลอยใน Dropdown"></div>
+                 <div class="ps-3 mb-1">
+                     <div class="row g-2">
+                         <div class="col-md-4"><input type="text" id="h_admin_p_1" class="form-control form-control-sm" placeholder="ตัวเลือก Dropdown 1"></div>
+                         <div class="col-md-4"><input type="text" id="h_admin_p_2" class="form-control form-control-sm" placeholder="ตัวเลือก Dropdown 2"></div>
+                         <div class="col-md-4"><input type="text" id="h_admin_p_3" class="form-control form-control-sm" placeholder="ตัวเลือก Dropdown 3"></div>
+                         <div class="col-md-4"><input type="text" id="h_admin_p_4" class="form-control form-control-sm" placeholder="ตัวเลือก Dropdown 4"></div>
+                         <div class="col-md-4"><input type="text" id="h_admin_p_5" class="form-control form-control-sm" placeholder="ตัวเลือก Dropdown 5"></div>
+                         <div class="col-md-4"><input type="text" id="h_admin_p_6" class="form-control form-control-sm" placeholder="ตัวเลือก Dropdown 6"></div>
+                     </div>
+                 </div>
+                 <div class="ps-3 mb-1 mt-2"><input type="text" class="form-control form-control-sm text-secondary" id="h_admin_fb_ph_3" placeholder="คำอธิบายกล่องข้อเสนอแนะ ส่วนที่ 4"></div>
+             </div>
+             <button class="btn btn-sm btn-warning w-100 fw-bold" onclick="saveHearingConfig()">บันทึกการตั้งค่าระบบรับฟังความคิดเห็นแบบมีส่วนร่วมทั้งหมด</button>
+          </div>
+
+          <div class="mt-3 bg-white p-3 rounded shadow-sm border-start border-4 border-info">
+             <h6 class="fw-bold text-info mb-3">ตั้งค่าทั่วไป (วิดีโอ, Dashboard & สื่อประชาสัมพันธ์)</h6>
+             <div class="mb-2"><label class="small text-muted">ชื่อหัวข้อวิดีโอหลัก:</label><input type="text" id="admin_video_title" class="form-control form-control-sm"></div>
+             <div class="mb-2"><label class="small text-muted">ลิงก์ YouTube (Video URL):</label><input type="text" id="admin_video_url" class="form-control form-control-sm"></div>
+             <hr class="text-muted">
+             <div class="mb-2"><label class="small text-muted">ลิงก์ Looker Studio (Embed Dashboard URL):</label><input type="text" id="admin_dash_url" class="form-control form-control-sm" placeholder="ลิงก์ฝัง iframe..."></div>
+             <div class="mb-2"><label class="small fw-bold text-primary">🔗 ลิงก์เว็บไซต์ Dashboard หลัก:</label><input type="text" id="admin_dash_main_url" class="form-control form-control-sm" placeholder="https://lookerstudio.google.com/reporting/..."></div>
+             <hr class="text-muted">
+             <div class="mb-2">
+                 <label class="small fw-bold text-success">สื่อประชาสัมพันธ์ (รองรับลิงก์ภาพจาก Google Drive หรือเว็บอื่นๆ):</label>
+                 <div class="row g-2 mt-1">
+                     <div class="col-md-12"><input type="text" id="h_admin_pr_1" class="form-control form-control-sm" placeholder="ลิงก์รูปภาพที่ 1"></div>
+                     <div class="col-md-12"><input type="text" id="h_admin_pr_2" class="form-control form-control-sm" placeholder="ลิงก์รูปภาพที่ 2"></div>
+                     <div class="col-md-12"><input type="text" id="h_admin_pr_3" class="form-control form-control-sm" placeholder="ลิงก์รูปภาพที่ 3"></div>
+                     <div class="col-md-12"><input type="text" id="h_admin_pr_4" class="form-control form-control-sm" placeholder="ลิงก์รูปภาพที่ 4 (เว้นว่างได้)"></div>
+                     <div class="col-md-12"><input type="text" id="h_admin_pr_5" class="form-control form-control-sm" placeholder="ลิงก์รูปภาพที่ 5 (เว้นว่างได้)"></div>
+                 </div>
+                 <div class="small text-danger mt-1">* หมายเหตุ: หากใช้ลิงก์จาก Google Drive อย่าลืมตั้งค่าแชร์ไฟล์เป็น "ทุกคนที่มีลิงก์"</div>
+             </div>
+             <button class="btn btn-sm btn-outline-info w-100 mt-3 fw-bold" onclick="saveGeneralConfig()">บันทึกการตั้งค่าทั่วไป</button>
+          </div>
+        </div>
+
+        <div id="sec-feedback" class="content-section text-center" style="background: #fff;">
+          <h3 class="fw-bold mb-5 text-dark" style="letter-spacing: 1px;">📢 รับฟังความคิดเห็นประชาชนในการพัฒนาจังหวัด</h3>
+          <div class="row justify-content-center">
+            
+            <div class="col-lg-9 mb-4 position-relative">
+              <div id="banner1" class="banner-btn bg-gradient-pink closed" onclick="handleBannerClick(1)" role="button">
+                <div id="badge1" class="new-badge">NEW</div>
+                <div class="banner-icon"><i class="material-icons">assignment</i></div>
+                <div class="banner-text">
+                   <div class="banner-title" id="disp_title_1">กำลังโหลด...</div>
+                   <div class="banner-desc" id="disp_desc_1">...</div>
+                   <div class="mt-2" id="info1"><span id="statusBadge1" class="status-badge" style="display:none;">⛔ ปิดรับแจ้ง</span><span class="date-badge" id="disp_date_1">...</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-9 mb-3 position-relative">
+              <div id="banner2" class="banner-btn bg-gradient-yellow closed" onclick="handleBannerClick(2)" role="button">
+                <div id="badge2" class="new-badge">NEW</div>
+                <div class="banner-icon"><i class="material-icons">groups</i></div>
+                <div class="banner-text">
+                   <div class="banner-title" id="disp_title_2">กำลังโหลด...</div>
+                   <div class="banner-desc" id="disp_desc_2">...</div>
+                   <div class="mt-2" id="info2"><span id="statusBadge2" class="status-badge" style="display:none;">⛔ ปิดรับฟังความเห็น</span><span class="date-badge" id="disp_date_2">...</span></div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <div id="sec-dash" class="content-section text-center">
+          <h4 class="text-primary mb-4 fw-bold">📊 Dashboard สรุปข้อมูล</h4>
+          <div id="dashboard_container" class="ratio ratio-16x9 w-100 border rounded shadow-sm bg-white overflow-hidden">
+             <div id="dash_placeholder" class="d-flex flex-column align-items-center justify-content-center h-100 bg-light text-muted">
+                 <i class="material-icons" style="font-size: 4rem;">bar_chart</i>
+                 <h5 class="mt-3">พื้นที่แสดงผล Dashboard</h5>
+                 <p>ระบบกำลังอยู่ระหว่างการเชื่อมต่อข้อมูล...</p>
+             </div>
+             <iframe id="main_dash_frame" src="" allowfullscreen style="display:none;"></iframe>
+          </div>
+          <div class="text-center mt-4" id="dashMainLinkDiv" style="display:none;">
+             <a id="dashMainLinkBtn" href="#" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm"><i class="material-icons align-middle me-1">open_in_new</i> เปิดดู Dashboard ฉบับเต็ม</a>
+          </div>
+        </div>
+
+        <div id="sec-pr" class="content-section">
+          <h4 class="text-primary mb-4 fw-bold"><i class="material-icons align-middle">campaign</i> สื่อประชาสัมพันธ์ (Info-Graphics)</h4>
+          <div id="prCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators" id="pr_indicators"></div>
+            <div class="carousel-inner" id="pr_inner"></div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#prCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon bg-dark rounded-circle p-2"></span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#prCarousel" data-bs-slide="next"><span class="carousel-control-next-icon bg-dark rounded-circle p-2"></span></button>
+          </div>
+        </div>
+        <div id="sec-facebook" class="content-section">
+          <h4 class="text-primary mb-4 fw-bold"><i class="material-icons align-middle">newspaper</i> ข่าวประชาสัมพันธ์ (Facebook)</h4>
+          <div class="bg-white rounded shadow-sm border p-3 text-center">
+            <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FChiangmaioffice&tabs=timeline&width=500&height=350&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false" width="100%" height="350" style="border:none; overflow:hidden; max-width: 500px;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+            <div class="text-center mt-3">
+                <a href="https://www.facebook.com/Chiangmaioffice" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill">ดูข่าวสารทั้งหมดบน Facebook <i class="material-icons align-middle fs-6">open_in_new</i></a>
+            </div>
+          </div>
+        </div>
+      </div> 
+
+      <div id="page-admin-dash" style="display:none;">
+          <div class="content-section">
+             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                 <h3 class="m-0 fw-bold text-dark"><i class="material-icons align-middle text-danger">analytics</i> สรุปผลข้อมูล (Admin Dashboard)</h3>
+                 <div>
+                    <a id="btnOpenSheet" href="#" target="_blank" class="btn btn-success fw-bold me-2"><i class="material-icons align-middle">table_view</i> เปิด Google Sheets</a>
+                    <button class="btn btn-outline-secondary" onclick="loadDashboard()"><i class="material-icons align-middle">refresh</i> รีโหลด</button>
+                 </div>
+             </div>
+
+             <div class="mb-4">
+                 <h5 class="fw-bold text-danger mb-3">1. สถิติเรื่องแจ้งและข้อเสนอแนะการพัฒนา (ฟอร์มสีชมพู)</h5>
+                 <div class="row g-3">
+                     <div class="col-md-4">
+                         <div class="card shadow-sm h-100 dash-card" style="border-left-color: #e91e63;">
+                             <div class="card-body d-flex align-items-center">
+                                 <div class="dash-icon bg-danger me-3"><i class="material-icons">assignment_late</i></div>
+                                 <div>
+                                     <div class="text-muted small fw-bold">เรื่องรับแจ้งทั้งหมด</div>
+                                     <div class="dash-num text-danger" id="stat_issues_total">0</div>
+                                     <small class="text-secondary">เรื่อง</small>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                     <div class="col-md-8"><div class="card shadow-sm h-100"><div class="card-body"><h6 class="card-title fw-bold text-muted small">แยกตามหมวดหมู่ปัญหา</h6><canvas id="chartIssues" style="max-height: 200px;"></canvas></div></div></div>
+                 </div>
+                 
+                 <div class="row mt-3">
+                     <div class="col-md-12">
+                         <div class="card shadow-sm border-0">
+                             <div class="card-body p-3 text-center">
+                                 <div class="d-flex justify-content-between align-items-center mb-2">
+                                     <h6 class="fw-bold text-muted m-0">สัดส่วนผู้แจ้งแยกตามอำเภอ (ฟอร์มสีชมพู)</h6>
+                                     <div class="btn-group btn-group-sm">
+                                         <button class="btn btn-outline-danger" onclick="toggleChartType('issues', 'doughnut')">โดนัท</button>
+                                         <button class="btn btn-outline-danger" onclick="toggleChartType('issues', 'bar')">กราฟแท่ง</button>
+                                     </div>
+                                 </div>
+                                 <canvas id="chartIssuesDistrict" style="max-height: 250px;"></canvas>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             
+             <hr class="my-5 border-secondary border-2 opacity-25">
+             
+             <div>
+                 <h5 class="fw-bold text-warning text-dark mb-3">2. สรุปผลระบบรับฟังความคิดเห็นแบบมีส่วนร่วม (ฟอร์มสีเหลือง)</h5>
+                 <div class="row g-3 mb-4">
+                     <div class="col-md-3">
+                         <div class="card shadow-sm h-100 dash-card" style="border-left-color: #f1c40f;">
+                             <div class="card-body d-flex align-items-center">
+                                 <div class="dash-icon bg-warning text-dark me-3"><i class="material-icons">groups</i></div>
+                                 <div>
+                                     <div class="text-muted small fw-bold">ผู้เข้าร่วมทั้งหมด</div>
+                                     <div class="dash-num text-dark" id="stat_hearing_total">0</div>
+                                     <small class="text-secondary">คน</small>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                     <div class="col-md-9">
+                         <div class="row g-3">
+                             <div class="col-md-6"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-muted">สัดส่วนภาคส่วน</h6><canvas id="chartSector" style="max-height: 180px;"></canvas></div></div></div>
+                             <div class="col-md-6"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-muted" id="lbl_dash_vision">ความเห็นต่อวิสัยทัศน์/เป้าหมาย</h6><canvas id="chartVision" style="max-height: 180px;"></canvas></div></div></div>
+                         </div>
+                     </div>
+                 </div>
+
+                 <div class="row mb-4">
+                     <div class="col-md-12">
+                         <div class="card shadow-sm border-0" style="border-top: 3px solid #f1c40f !important;">
+                             <div class="card-body p-3 text-center">
+                                 <div class="d-flex justify-content-between align-items-center mb-2">
+                                     <h6 class="text-center small fw-bold m-0 text-muted">สัดส่วนผู้เข้าร่วมแยกตามอำเภอ (ฟอร์มสีเหลือง)</h6>
+                                     <div class="btn-group btn-group-sm">
+                                         <button class="btn btn-outline-warning text-dark" onclick="toggleChartType('hearing', 'doughnut')">โดนัท</button>
+                                         <button class="btn btn-outline-warning text-dark" onclick="toggleChartType('hearing', 'bar')">กราฟแท่ง</button>
+                                     </div>
+                                 </div>
+                                 <canvas id="chartHearingDistrict" style="max-height: 250px;"></canvas>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+
+                 <div class="card shadow-sm border-0 mb-4" style="background: #f8f9fa;">
+                    <div class="card-body text-center p-4">
+                      <div class="d-flex justify-content-end mb-2 align-items-center">
+                          <span class="small text-muted me-2 fw-bold">รูปแบบการสรุปผล:</span>
+                          <div class="btn-group btn-group-sm" role="group">
+                              <input type="radio" class="btn-check" name="calcMode" id="modeAvg" value="avg" checked onchange="refreshTableCalculation()">
+                              <label class="btn btn-outline-primary" for="modeAvg">📊 ค่าเฉลี่ย (Average)</label>
+                              <input type="radio" class="btn-check" name="calcMode" id="modePos" value="pos" onchange="refreshTableCalculation()">
+                              <label class="btn btn-outline-success" for="modePos">👍 เชิงบวก (Positive %)</label>
+                          </div>
+                      </div>
+
+                      <h5 class="fw-bold text-primary mb-3"><i class="material-icons align-middle fs-5">pie_chart</i> ภาพรวมความคิดเห็นต่อประเด็นทั้งหมด (Summary)</h5>
+                      <div class="mb-2 text-muted small" id="lbl_dash_scale_info"></div>
+                      <div style="max-width: 350px; max-height: 350px;" class="mx-auto mb-4"><canvas id="chartSummary"></canvas></div>
+                      
+                      <div class="table-responsive px-md-3 mt-4">
+                        <table class="table table-bordered table-striped bg-white shadow-sm align-middle" style="font-size: 0.9rem;">
+                          <thead class="table-primary text-center" id="summaryTableHead"></thead>
+                          <tbody id="summaryTableBody" class="text-center text-dark"></tbody>
+                        </table>
+                      </div>
+                      <div id="criteriaFootnote" class="text-start small text-muted mt-2 px-md-3" style="font-size: 0.8rem;"></div>
+                    </div>
+                 </div>
+
+                 <div class="text-center mb-4 mt-5"><button class="btn btn-outline-secondary rounded-pill px-5 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#detailedChartsCollapse">🔍 ดูรายละเอียดแยกตามรายประเด็น <i class="material-icons align-middle fs-5">expand_more</i></button></div>
+
+                 <div class="collapse" id="detailedChartsCollapse">
+                     <div class="row g-3 mt-1 bg-white p-3 rounded shadow-sm border border-secondary border-opacity-10">
+                         <div class="col-md-12"><h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">สรุปความคิดเห็นแยกรายข้อ</h6></div>
+                         <div class="col-md-4" id="col_chartT1"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-dark" id="lbl_chartT1">ประเด็น 1</h6><canvas id="chartT1" style="max-height: 180px;"></canvas></div></div></div>
+                         <div class="col-md-4" id="col_chartT2"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-dark" id="lbl_chartT2">ประเด็น 2</h6><canvas id="chartT2" style="max-height: 180px;"></canvas></div></div></div>
+                         <div class="col-md-4" id="col_chartT3"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-dark" id="lbl_chartT3">ประเด็น 3</h6><canvas id="chartT3" style="max-height: 180px;"></canvas></div></div></div>
+                         <div class="col-md-4" id="col_chartT4"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-dark" id="lbl_chartT4">ประเด็น 4</h6><canvas id="chartT4" style="max-height: 180px;"></canvas></div></div></div>
+                         <div class="col-md-4" id="col_chartT5"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-dark" id="lbl_chartT5">ประเด็น 5</h6><canvas id="chartT5" style="max-height: 180px;"></canvas></div></div></div>
+                         <div class="col-md-4" id="col_chartT6"><div class="card shadow-sm h-100 border-0" style="border-top: 3px solid #f1c40f !important;"><div class="card-body p-2"><h6 class="text-center small fw-bold mt-2 text-dark" id="lbl_chartT6">ประเด็น 6</h6><canvas id="chartT6" style="max-height: 180px;"></canvas></div></div></div>
+                     </div>
+                 </div>
+
+                 <div class="row g-3 mt-4 mb-5">
+                     <div class="col-md-12"><div class="card shadow-sm h-100 border-start border-4 dash-card" style="border-left-color: #f1c40f !important;"><div class="card-body p-3"><h6 class="small fw-bold text-dark mb-3" id="lbl_dash_priority">สรุปประเด็นเร่งด่วนที่สุดที่ควรได้รับการแก้ไข</h6><canvas id="chartPriority" style="max-height: 200px;"></canvas></div></div></div>
+                 </div>
+             </div>
+          </div> 
+      </div>
+
+      <div id="page-videos" style="display:none;"><div class="content-section"><div class="d-flex justify-content-between align-items-center mb-3"><h3 class="section-header m-0 border-0 pb-0">▶️ คลังวิดีโอแนะนำ</h3><div id="adminVideoBtnGroup" style="display:none; gap: 8px;"><button class="btn btn-primary fw-bold" onclick="openVideoModal()"><i class="material-icons align-middle">add</i> เพิ่มวิดีโอ</button><button class="btn btn-danger fw-bold px-3" onclick="logoutSystem()"><i class="material-icons align-middle">logout</i></button></div></div><hr class="text-secondary mt-0 mb-4"><div id="videoListContainer" class="row g-4"><div class="text-center text-muted py-5 w-100">กำลังโหลดวิดีโอ...</div></div></div></div>
+      <div id="page-docs" style="display:none;"><div class="content-section"><div class="d-flex justify-content-between align-items-center mb-3"><h3 class="section-header m-0 border-0 pb-0">📂 เอกสารและข้อมูลที่เกี่ยวข้อง</h3><div id="adminDocBtnGroup" style="display:none; gap: 8px;"><button class="btn btn-primary fw-bold" onclick="openDocModal()"><i class="material-icons align-middle">add</i> เพิ่มเอกสาร</button><button class="btn btn-danger fw-bold px-3" onclick="logoutSystem()"><i class="material-icons align-middle">logout</i></button></div></div><hr class="text-secondary mt-0 mb-3"><div class="row g-2 mb-3 align-items-center p-3 bg-light rounded border"><div class="col-md-4"><label class="small text-muted fw-bold mb-1">ค้นหาคำในชื่อเอกสาร</label><input type="search" id="searchDoc" class="form-control" placeholder="🔍 ค้นหาเอกสาร..." oninput="filterDocs()"></div><div class="col-md-3"><label class="small text-muted fw-bold mb-1">หมวดหมู่</label><select id="filterCat" class="form-select" onchange="filterDocs()"><option value="All">ทุกหมวดหมู่</option><option value="General">เอกสารทั่วไป</option><option value="Plan">แผนพัฒนา</option><option value="Report">รายงานผล</option><option value="Announcement">ประกาศ/คำสั่ง</option></select></div><div class="col-md-3"><label class="small text-muted fw-bold mb-1">ปีงบประมาณ</label><select id="filterYear" class="form-select" onchange="filterDocs()"><option value="All">ทุกปีงบประมาณ</option></select></div><div class="col-md-2 mt-auto"><button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" onclick="clearSearch()"><i class="material-icons me-1" style="font-size: 18px;">refresh</i> ล้างค่า</button></div></div><div class="text-muted small mb-3 text-start px-2"><b>* หมายเหตุ:</b> ระบบยังอยู่ในช่วงทดลองใช้งาน การประมวลผลข้อมูลของ AI อาจเกิดความคลาดเคลื่อนได้ กรุณาตรวจสอบข้อมูลก่อนนำไปใช้ทุกครั้ง</div><div id="docListContainer" class="list-group list-group-flush border rounded shadow-sm"></div><div id="pagination" class="pagination-container"></div></div></div>
+      <div id="page-calendar" style="display:none;"><div class="content-section border-0 bg-transparent p-0 mb-4 shadow-none"><h2 class="text-primary fw-bold"><i class="material-icons align-middle fs-2">calendar_month</i> ปฏิทินกิจกรรมจังหวัด</h2><p class="text-muted">รวมกิจกรรมสำคัญ การประชุม และแผนงานของจังหวัดเชียงใหม่</p></div><div class="alert alert-info shadow-sm" role="alert"><i class="material-icons align-middle me-2">info</i> ตารางกิจกรรมด้านล่างเป็นการแสดงผลจากระบบปฏิทินกลางของจังหวัดเชียงใหม่</div><div class="content-section text-center py-5 shadow-sm border"><i class="material-icons text-primary mb-3" style="font-size: 5rem;">event_available</i><h3 class="fw-bold text-dark">ระบบปฏิทินกลาง จังหวัดเชียงใหม่</h3><p class="text-muted mb-4">เชื่อมต่อฐานข้อมูลจาก Server สำนักงานจังหวัดโดยตรง</p><a href="http://164.115.44.24/cmbase/public/calendar" target="_blank" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow"><i class="material-icons align-middle me-2">open_in_new</i> คลิกเพื่อเปิดดูปฏิทิน</a></div></div>
+      <div id="page-qa" style="display:none;"><div class="content-section"><div class="d-flex justify-content-between align-items-center mb-3"><h3 class="section-header m-0 border-0 pb-0">❓ ถาม-ตอบ (Q&A)</h3><div id="adminQABtnGroup" style="display:none; gap: 8px;"><button class="btn btn-primary fw-bold" onclick="openQAModal()"><i class="material-icons align-middle">add</i> เพิ่ม Q&A</button><button class="btn btn-danger fw-bold px-3" onclick="logoutSystem()"><i class="material-icons align-middle">logout</i></button></div></div><hr class="text-secondary mt-0 mb-4"><div class="accordion accordion-flush border rounded shadow-sm" id="accQA"></div></div></div>
+
+    </div> </div> <footer class="main-footer">
+    <div class="container-fluid p-0">
+      <div class="row m-0">
+        <div class="col-lg-4 mb-4 mb-lg-0">
+          <h5 class="footer-title">กลุ่มงานยุทธศาสตร์และข้อมูล<br>เพื่อการพัฒนาจังหวัด</h5>
+          <p class="mb-2 text-white-50">สำนักงานจังหวัดเชียงใหม่</p>
+          <p class="small opacity-50">อาคารอำนวยการ ชั้น 3 ศาลากลางจังหวัดเชียงใหม่ ถนนโชตนา <br>ตำบลช้างเผือก อำเภอเมืองเชียงใหม่ จังหวัดเชียงใหม่ 50300</p>
+          <div id="footerCopyright">© 2026 All Rights Reserved.</div>
+          <div class="admin-link-container"><a href="javascript:void(0);" onclick="loginToggle()" class="admin-trigger"><i class="material-icons align-middle fs-6 me-1">lock</i>เข้าสู่ระบบผู้ดูแลระบบ</a></div>
+        </div>
+        <div class="col-lg-4 mb-4 mb-lg-0">
+          <h5 class="footer-title">ช่องทางการติดต่อ</h5>
+          <ul class="list-unstyled">
+            <li class="mb-3 d-flex"><span class="me-2">📞</span> <span>053-112-703</span></li>
+            <li class="mb-3 d-flex"><span class="me-2">📧</span> <span>plancm.700@gmail.com</span></li>
+            <li class="mb-3 d-flex"><span class="me-2">🕒</span> <span>จันทร์ - ศุกร์ (08.30 - 16.30 น.)</span></li>
+            <li class="mb-3 d-flex"><span class="me-2">🌐</span> <a href="http://www.chiangmai.go.th" class="text-decoration-none text-white-50" target="_blank">www.chiangmai.go.th</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <h5 class="footer-title">แผนที่ตั้งหน่วยงาน</h5>
+          <div class="map-container mb-3" style="height: 200px; background: #333;"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3776.121520722174!2d98.97130430000001!3d18.8372638!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30da3b0703e9939d%3A0x32f88414140cedb9!2z4Lio4Liy4Lil4Liy4LiB4Lil4Liy4LiH4LiI4Lix4LiH4Lir4Lin4Lix4LiU4LmA4LiK4Li14Lii4LiH4LmD4Lir4Lih4LmI!5e0!3m2!1sth!2sth!4v1771695612921!5m2!1sth!2sth" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+          <a href="https://maps.app.goo.gl/6GuRPUwyPccXYz778" target="_blank" class="btn btn-outline-light btn-sm w-100"><i class="material-icons align-middle fs-6">near_me</i> นำทาง via Google Maps</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="modal fade" id="chatModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title fw-bold"><i class="material-icons align-text-bottom me-2">smart_toy</i> ถาม AI เกี่ยวกับเอกสาร</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><div id="chatHistory" class="chat-container"></div><div class="p-3 border-top bg-light"><div class="input-group"><input type="text" id="chatInput" class="form-control" placeholder="พิมพ์คำถาม..." onkeypress="if(event.key==='Enter') sendChat()"><button class="btn btn-primary" onclick="sendChat()"><i class="material-icons">send</i></button></div></div></div></div></div></div>
+  <div class="modal fade" id="ratingModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content text-center"><div class="modal-header bg-warning text-dark border-0"><h5 class="modal-title fw-bold mx-auto">⭐ ประเมินความพึงพอใจ</h5></div><div class="modal-body p-4"><h5 class="mb-4 text-success fw-bold">ส่งข้อมูลสำเร็จ ขอบพระคุณอย่างยิ่ง!</h5><p class="text-muted">โปรดให้คะแนนความพึงพอใจในการใช้งานระบบ S-MAP</p><div class="star-rating mb-4 d-flex justify-content-center gap-2" id="starContainer"><i class="material-icons" data-val="1" onclick="setStar(1)" onmouseover="hoverStar(1)" onmouseout="resetStar()">star</i><i class="material-icons" data-val="2" onclick="setStar(2)" onmouseover="hoverStar(2)" onmouseout="resetStar()">star</i><i class="material-icons" data-val="3" onclick="setStar(3)" onmouseover="hoverStar(3)" onmouseout="resetStar()">star</i><i class="material-icons" data-val="4" onclick="setStar(4)" onmouseover="hoverStar(4)" onmouseout="resetStar()">star</i><i class="material-icons" data-val="5" onclick="setStar(5)" onmouseover="hoverStar(5)" onmouseout="resetStar()">star</i></div><input type="hidden" id="sys_rating_val" value="0"><div class="mb-3 text-start"><textarea class="form-control" id="sys_feedback" rows="2" placeholder="ข้อเสนอแนะเรื่องระบบเว็บ (ไม่บังคับ)..."></textarea></div><button type="button" class="btn btn-primary w-100 fw-bold" onclick="submitRating()">เสร็จสิ้น</button></div></div></div></div>
+  <div class="modal fade" id="adminDocModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title fw-bold" id="docModalTitle">จัดการเอกสาร</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light"><form id="adminDocForm" onsubmit="submitDocument(event)"><input type="hidden" id="doc_id"><div class="row g-2 mb-2"><div class="col-md-9"><label class="small text-muted fw-bold">ชื่อเอกสาร <span class="text-danger">*</span></label><input type="text" class="form-control" id="doc_title" required></div><div class="col-md-3"><label class="small text-muted fw-bold">ปีงบประมาณ</label><input type="text" class="form-control" id="doc_year" placeholder="เช่น 2567"></div></div><div class="mb-2"><label class="small text-muted fw-bold">คำอธิบายเพิ่มเติม</label><input type="text" class="form-control" id="doc_desc"></div><div class="row g-2 mb-2"><div class="col-md-6"><label class="small text-muted fw-bold">หมวดหมู่</label><select class="form-select" id="doc_cat"><option value="General">เอกสารทั่วไป</option><option value="Plan">แผนพัฒนา</option><option value="Report">รายงานผล</option><option value="Announcement">ประกาศ/คำสั่ง</option></select></div><div class="col-md-6"><label class="small text-muted fw-bold">AI Chatbot</label><select class="form-select" id="doc_ai_status"><option value="ON">🟢 เปิดใช้งาน AI Chatbot</option><option value="OFF">🔴 ปิดใช้งาน AI</option></select></div></div><div class="mb-3"><label class="small text-muted fw-bold">ลิงก์ไฟล์ (URL) <span class="text-danger">*</span></label><input type="text" class="form-control" id="doc_link" required></div><div class="p-3 border rounded bg-white"><div class="row"><div class="col-md-12"><label class="small text-muted fw-bold">ลำดับการแสดงผล (ใส่ตัวเลข)</label><input type="number" class="form-control" id="doc_order" placeholder="เว้นว่างได้"></div><div class="col-md-4 pt-3"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="doc_is_pinned"><label class="small fw-bold text-dark">📌 ปักหมุดบนสุด</label></div></div><div class="col-md-4 pt-3"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="doc_is_important"><label class="small fw-bold text-danger">⭐ ติดป้ายสำคัญ</label></div></div><div class="col-md-12 pt-3 border-top mt-3" id="newBadgeToggleDiv"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="doc_hide_new_badge"><label class="small fw-bold text-secondary">🚫 ปิดไม่ให้แสดงป้าย NEW</label></div></div></div></div><div class="mt-4 text-end"><button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">ยกเลิก</button><button type="submit" class="btn btn-success fw-bold px-4">บันทึกข้อมูล</button></div></form></div></div></div></div>
+  <div class="modal fade" id="adminVideoModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title fw-bold" id="vidModalTitle">เพิ่มวิดีโอ</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form onsubmit="submitVideo(event)"><input type="hidden" id="vid_id"><div class="mb-2"><label class="small text-muted fw-bold">ชื่อหัวข้อวิดีโอ</label><input type="text" class="form-control" id="vid_title" required></div><div class="mb-2"><label class="small text-muted fw-bold">คำอธิบาย (ใส่หรือไม่ใส่ก็ได้)</label><textarea class="form-control" id="vid_desc" rows="3"></textarea></div><div class="mb-2"><label class="small text-muted fw-bold">ลิงก์ YouTube</label><input type="text" class="form-control" id="vid_link" required></div><div class="mb-3"><label class="small text-muted fw-bold">ลำดับ</label><input type="number" class="form-control" id="vid_order"></div><div class="text-end"><button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">ยกเลิก</button><button type="submit" class="btn btn-success fw-bold px-4">บันทึก</button></div></form></div></div></div></div>
+  <div class="modal fade" id="adminQAModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title fw-bold" id="qaModalTitle">เพิ่ม Q&A</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form onsubmit="submitQA(event)"><input type="hidden" id="qa_id"><div class="row g-2 mb-2"><div class="col-3"><label class="small text-muted fw-bold">ไอคอน</label><select class="form-select" id="qa_emoji"><option value="❓">❓</option><option value="📢">📢</option><option value="🔴">🔴</option><option value="🟢">🟢</option><option value="🔥">🔥</option><option value="⭐">⭐</option><option value="📌">📌</option><option value="💡">💡</option></select></div><div class="col-9"><label class="small text-muted fw-bold">คำถาม</label><input type="text" class="form-control" id="qa_question" required></div></div><div class="mb-3"><label class="small text-muted fw-bold">คำตอบ</label><textarea class="form-control" id="qa_answer" rows="4" required></textarea></div><div class="text-end"><button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">ยกเลิก</button><button type="submit" class="btn btn-success fw-bold px-4">บันทึก</button></div></form></div></div></div></div>
+
+  <div class="modal fade" id="formModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="formTitle">แบบฟอร์มแจ้งปัญหาทั่วไป</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div id="pinkStep1">
+             <h5 class="fw-bold text-danger mb-3"><i class="material-icons align-middle">security</i> นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h5>
+             <div class="bg-light p-3 rounded mb-3 border text-muted" style="font-size: 0.9rem; max-height: 250px; overflow-y: auto;">
+                 สำนักงานจังหวัดเชียงใหม่ ขอดำเนินการเก็บรวบรวมข้อมูลส่วนบุคคลของท่าน ได้แก่ ชื่อ-นามสกุล, อำเภอที่อยู่อาศัย และเบอร์โทรศัพท์ (ถ้ามี) เพื่อใช้ในการติดต่อกลับ ดำเนินการแก้ไขปัญหาตามที่ท่านได้แจ้งไว้ และนำข้อมูลไปวิเคราะห์เพื่อการพัฒนาจังหวัดเชียงใหม่ต่อไป<br><br>
+                 การดำเนินการดังกล่าวอยู่ภายใต้ <strong>พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)</strong> และ <strong>ประกาศจังหวัดเชียงใหม่ เรื่อง นโยบายการคุ้มครองข้อมูลส่วนบุคคล (Privacy Policy)</strong> โดยข้อมูลของท่านจะถูกเก็บรักษาเป็นความลับอย่างเคร่งครัด<br><br>
+                 <strong class="text-dark">สิทธิของเจ้าของข้อมูล:</strong><br>
+                 ท่านมีสิทธิในการขอเข้าถึง ขอรับสำเนา ขอแก้ไขข้อมูลให้ถูกต้อง หรือขอให้ลบทำลายข้อมูลส่วนบุคคลของท่านได้ ตามหลักเกณฑ์ที่กฎหมายกำหนด
+             </div>
+             <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="pinkCheckPdpa" style="transform: scale(1.2); margin-top: 0.3rem;">
+                <label class="form-check-label fw-bold text-danger ms-2">ข้าพเจ้าได้อ่านและยินยอมให้เก็บรวบรวมข้อมูล</label>
+             </div>
+             <button type="button" class="btn btn-danger w-100 fw-bold py-2" onclick="nextPinkStep()">ถัดไป <i class="material-icons align-middle fs-6">arrow_forward</i></button>
+          </div>
+          <form id="pinkStep2" style="display:none;" onsubmit="submitForm(event)">
+            <input type="hidden" id="f_topic_type">
+            <div class="mb-3"><label class="fw-bold form-label">ชื่อ-นามสกุล <span class="text-danger">*</span></label><input class="form-control" id="f_name" required></div>
+            <div class="mb-3"><label class="form-label fw-bold">อำเภอที่เกิดปัญหา/ร้องเรียน <span class="text-danger">*</span></label><select class="form-select" id="f_district" required></select></div>
+            <div class="mb-3"><label class="fw-bold form-label">เบอร์ติดต่อ</label><input class="form-control" id="f_contact"></div>
+            <div class="mb-3" id="topicSelectDiv"><label class="fw-bold form-label">หมวดหมู่ <span class="text-danger">*</span></label><select class="form-select" id="f_topic_select" required></select></div>
+            <div class="mb-4"><label class="fw-bold form-label">รายละเอียด <span class="text-danger">*</span></label><textarea class="form-control" id="f_detail" rows="4" required></textarea></div>
+            <div class="d-flex gap-2"><button type="button" class="btn btn-secondary fw-bold px-4" onclick="backPinkStep()">กลับ</button><button type="submit" class="btn btn-success fw-bold shadow-sm flex-grow-1">🚀 ยืนยันส่งข้อมูล</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="hearingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title fw-bold" id="disp_h_title">รับฟังความคิดเห็น</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body bg-light">
+          <div class="text-center mb-2"><img id="disp_h_img" class="hearing-banner-img shadow-sm" src="" style="display:none;"></div>
+          <div id="hearingClosedMsg" class="alert alert-danger text-center shadow-sm" style="display:none;"><i class="material-icons fs-1 mb-2">lock</i><h5 class="fw-bold">ขณะนี้ปิดรับฟังความคิดเห็นแล้ว</h5></div>
+
+          <div id="yellowStep1" class="bg-white p-4 rounded shadow-sm border border-warning" style="display:none;">
+             <h4 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="material-icons align-middle text-warning">security</i> นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h4>
+             <div id="disp_yellow_pdpa_text" class="bg-light p-3 rounded mb-4 border text-muted" style="font-size: 0.95rem; max-height: 350px; overflow-y: auto; white-space: pre-line;"></div>
+             <div class="form-check mb-4"><input class="form-check-input" type="checkbox" id="yellowCheckPdpa" style="transform: scale(1.3); margin-top: 0.25rem;"><label class="form-check-label fw-bold text-danger ms-2" style="font-size: 1.1rem;">ข้าพเจ้าได้อ่านและยินยอมตามเงื่อนไขด้านบน</label></div>
+             <button type="button" class="btn btn-warning w-100 fw-bold text-dark btn-lg shadow-sm" onclick="nextYellowStep()">เข้าสู่แบบฟอร์ม <i class="material-icons align-middle fs-5">arrow_forward</i></button>
+          </div>
+
+          <form id="yellowStep2" style="display:none;" onsubmit="submitHearing(event)" class="bg-white p-3 p-md-4 border rounded shadow-sm">
+             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2"><button type="button" class="btn btn-sm btn-secondary" onclick="backYellowStep()"><i class="material-icons align-middle" style="font-size:16px;">arrow_back</i> กลับไปหน้าข้อตกลง</button></div>
+             <h4 class="fw-bold text-center text-primary mb-4" id="disp_h_plan_name">แผนพัฒนาจังหวัดเชียงใหม่</h4>
+             
+             <h5 class="fw-bold text-primary border-bottom pb-2 mb-3" id="disp_h_q1">ส่วนที่ 1: ข้อมูลทั่วไปของผู้ตอบแบบสอบถาม</h5>
+             <div class="row g-3 mb-4">
+                <div class="col-md-6"><label class="form-label fw-bold"><span id="disp_lbl_name">ชื่อ-นามสกุล</span> <span class="text-danger">*</span></label><input type="text" class="form-control" id="h_name" required></div>
+                <div class="col-md-6" id="div_h_idcard" style="display:none;"><label class="form-label fw-bold"><span id="disp_lbl_idcard">เลขประจำตัวประชาชน 13 หลัก</span> <span class="text-danger">*</span></label><input type="text" class="form-control" id="h_idcard" maxlength="13" placeholder="กรอกเฉพาะตัวเลข 13 หลัก"></div>
+                <div class="col-md-6"><label class="form-label fw-bold">เบอร์โทรศัพท์ <span class="text-muted fw-normal">(ถ้ามี)</span></label><input type="text" class="form-control" id="h_phone" placeholder="เพื่อใช้ในการติดต่อกลับกรณีจำเป็น"></div>
+                <div class="col-md-6"><label class="form-label fw-bold"><span id="disp_lbl_district">อำเภอที่อยู่อาศัย</span> <span class="text-danger">*</span></label><select class="form-select" id="h_district" required></select></div>
+                <div class="col-md-12"><label class="form-label fw-bold"><span id="disp_lbl_sector">ท่านสังกัดภาคส่วนใด</span> <span class="text-danger">*</span></label><select class="form-select" id="h_sector" required></select></div>
+             </div>
+
+             <div class="bg-light border rounded p-4 mb-4 mt-2 shadow-sm border-primary border-opacity-25">
+                 <h5 class="fw-bold text-dark mb-2" id="disp_h_info_title">หลักการและเหตุผล</h5>
+                 <p class="text-muted mb-4" id="disp_h_info_desc" style="white-space: pre-line;">รายละเอียดชี้แจง...</p>
+                 <div class="d-flex justify-content-start gap-3 flex-wrap mb-4">
+                     <a id="disp_h_sum" href="#" target="_blank" class="btn btn-outline-primary fw-bold rounded-pill px-4" style="display:none;"><i class="material-icons align-middle fs-6 me-1">description</i> สรุปอย่างย่อ</a>
+                     <a id="disp_h_full" href="#" target="_blank" class="btn btn-primary fw-bold rounded-pill px-4" style="display:none;"><i class="material-icons align-middle fs-6 me-1">menu_book</i> ร่างแผนฉบับเต็ม</a>
+                 </div>
+                 <div class="form-check border-top pt-3"><input class="form-check-input" type="checkbox" id="h_info_consent" required><label class="form-check-label fw-bold text-danger" for="h_info_consent" id="disp_h_consent"></label></div>
+             </div>
+
+             <h5 class="fw-bold text-primary border-bottom pb-2 mb-3 mt-4" id="disp_h_q2">ส่วนที่ 2: ความคิดเห็นต่อเป้าหมายการพัฒนาจังหวัด (Vision)</h5>
+             <div class="mb-4 ps-2">
+                <div class="form-check mb-2"><input class="form-check-input" type="radio" name="h_vision" value="เห็นด้วย" required><label class="form-check-label">เห็นด้วย</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" type="radio" name="h_vision" value="เห็นด้วยแต่ควรปรับปรุงเพิ่มเติม"><label class="form-check-label">เห็นด้วย แต่ควรปรับปรุงเพิ่มเติม</label></div>
+                <div class="form-check"><input class="form-check-input" type="radio" name="h_vision" value="ไม่เห็นด้วย"><label class="form-check-label">ไม่เห็นด้วย</label></div>
+                <textarea class="form-control mt-3" id="h_vision_fb" rows="2"></textarea>
+             </div>
+
+             <h5 class="fw-bold text-primary border-bottom pb-2 mb-3" id="disp_h_q3">ส่วนที่ 3: ความคิดเห็นต่อประเด็นการพัฒนา (Strategic Issues)</h5>
+             <div class="table-responsive mb-2"><table class="table table-bordered table-striped align-middle text-center small"><thead class="table-light" id="dynamic_topics_head"></thead><tbody id="dynamic_topics_body"></tbody></table></div>
+             <textarea class="form-control mb-4" id="h_strategy_fb" rows="2"></textarea>
+
+             <h5 class="fw-bold text-primary border-bottom pb-2 mb-3" id="disp_h_q4">ส่วนที่ 4: การจัดลำดับความสำคัญและข้อเสนอแนะ</h5>
+             <div class="mb-3"><select class="form-select" id="h_priority" required></select></div>
+             <div class="mb-3"><textarea class="form-control" id="h_feedback" rows="3"></textarea></div>
+
+             <div class="d-grid mt-4"><button type="submit" class="btn btn-warning btn-lg fw-bold shadow-sm text-dark" id="btnSubmitHearing">✅ ส่งแบบรับฟังความคิดเห็น</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // 🟢 UI Helpers 🟢
+    function setElText(id, txt) { let el = document.getElementById(id); if (el) el.innerText = txt || ""; }
+    function setElHtml(id, html) { let el = document.getElementById(id); if (el) el.innerHTML = html || ""; }
+    function setElVal(id, val) { let el = document.getElementById(id); if (el) el.value = val || ""; }
+    function getVal(id) { let el = document.getElementById(id); return el ? el.value : ""; }
+
+    function setStar(val) {
+        document.getElementById('sys_rating_val').value = val;
+        document.querySelectorAll('.star-rating i').forEach((item, idx) => {
+            if (idx < val) item.classList.add('active'); else item.classList.remove('active');
+        });
+    }
+    
+    function hoverStar(val) {
+        document.querySelectorAll('.star-rating i').forEach((item, idx) => {
+            if (idx < val) item.classList.add('hover'); else item.classList.remove('hover');
+        });
+    }
+    
+    function resetStar() {
+        let sc = document.getElementById('sys_rating_val').value;
+        document.querySelectorAll('.star-rating i').forEach((item, idx) => {
+            item.classList.remove('hover');
+            if (idx >= sc) item.classList.remove('active');
+        });
+    }
+
+    // 🟢 Global Variables 🟢
+    const scaleConfigs = {
+        "2": { labels: ["เห็นด้วย", "ไม่เห็นด้วย"], colors: ["#2ecc71", "#e74c3c"] },
+        "4": { labels: ["เห็นด้วยมาก", "เห็นด้วย", "ไม่แน่ใจ", "ไม่เห็นด้วย"], colors: ["#27ae60", "#2ecc71", "#f1c40f", "#e74c3c"] },
+        "5": { labels: ["เห็นด้วยอย่างยิ่ง", "เห็นด้วย", "ไม่แน่ใจ", "ไม่เห็นด้วย", "ไม่เห็นด้วยอย่างยิ่ง"], colors: ["#1abc9c", "#2ecc71", "#f1c40f", "#e67e22", "#e74c3c"] }
+    };
+
+    const chiangMaiDistricts = [
+        "กัลยาณิวัฒนา", "จอมทอง", "เชียงดาว", "ไชยปราการ", "ดอยเต่า", 
+        "ดอยสะเก็ด", "ดอยหล่อ", "ฝาง", "พร้าว", "เมืองเชียงใหม่", 
+        "แม่แจ่ม", "แม่แตง", "แม่ริม", "แม่วาง", "แม่อาย", 
+        "แม่ออน", "เวียงแหง", "สะเมิง", "สันกำแพง", "สันทราย", 
+        "สันป่าตอง", "สารภี", "หางดง", "อมก๋อย", "ฮอด"
+    ];
+
+    let docs = []; let qaList = []; let filteredDocs = []; let videoList = [];
+    let isAdmin = false; let adminToken = "";
+    let form1Open = true; let hOpen = true; 
+    let form1Title = ""; let form1Desc = ""; let form1Date = "";
+    let hTitle = ""; let hDesc = ""; let hDate = ""; let hPlanName = "";
+    let hRatingOpen = true; let hReqIdcard = "OFF"; let currentScaleType = "5"; 
+    let hPdpaMode = "AUTO"; let hPdpaCustomText = "";
+    let h_topics = ["", "", "", "", "", ""];
+    let showNewBadge = true; let globalDashboardData = null; 
+    let currentPage = 1; const itemsPerPage = 10; let currentDocLink = "";
+    
+    let chartDataStore = { issues: { labels: [], data: [], type: 'doughnut' }, hearing: { labels: [], data: [], type: 'doughnut' } };
+    let charts = { issues: null, sector: null, vision: null, priority: null, summary: null, chartIssuesDistrict: null, chartHearingDistrict: null, t1: null, t2: null, t3: null, t4: null, t5: null, t6: null };
+
+    function checkThaiID(id) {
+        if (!id || id.length !== 13 || isNaN(id)) return false;
+        let sum = 0;
+        for (let i = 0; i < 12; i++) { sum += parseInt(id.charAt(i)) * (13 - i); }
+        let check = (11 - (sum % 11)) % 10;
+        return check === parseInt(id.charAt(12));
+    }
+
+    function convertDriveUrl(url) {
+        if (!url) return "";
+        let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) return "https://drive.google.com/thumbnail?id=" + match[1] + "&sz=w1280"; 
+        return url;
+    }
+
+    async function fetchSafe(url) {
+        try {
+            const response = await fetch(url); const text = await response.text();
+            try {
+                const json = JSON.parse(text);
+                if (json && json.status === "ERROR") throw new Error(json.message);
+                return json;
+            } catch (e) { throw new Error("เซิร์ฟเวอร์ตอบกลับผิดปกติ (โปรดตรวจสอบการ Deploy ให้เป็น New Version)"); }
+        } catch(err) { throw new Error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (" + err.message + ")"); }
+    }
+
+    // 🟢 PDPA 🟢
+    function nextPinkStep() {
+        let chk = document.getElementById('pinkCheckPdpa');
+        if (!chk.checked) return Swal.fire('แจ้งเตือน', 'กรุณากดติ๊กยินยอมให้เก็บรวบรวมข้อมูลก่อนเข้าสู่แบบฟอร์มครับ', 'warning');
+        document.getElementById('pinkStep1').style.display = 'none';
+        document.getElementById('pinkStep2').style.display = 'block';
+    }
+    function backPinkStep() { document.getElementById('pinkStep1').style.display = 'block'; document.getElementById('pinkStep2').style.display = 'none'; }
+    function nextYellowStep() {
+        let chk = document.getElementById('yellowCheckPdpa');
+        if (!chk.checked) return Swal.fire('แจ้งเตือน', 'กรุณากดติ๊กยอมรับเงื่อนไขนโยบาย PDPA ก่อนเข้าสู่แบบฟอร์มครับ', 'warning');
+        document.getElementById('yellowStep1').style.display = 'none';
+        document.getElementById('yellowStep2').style.display = 'block';
+    }
+    function backYellowStep() { document.getElementById('yellowStep1').style.display = 'block'; document.getElementById('yellowStep2').style.display = 'none'; }
+
+    function getOfficialPdpaText() {
+        let plan = getVal('h_admin_plan_name') || hPlanName || "แผนพัฒนาจังหวัดเชียงใหม่";
+        let reqIdEl = document.getElementById('swReqIdCard');
+        let reqId = reqIdEl ? reqIdEl.checked : (hReqIdcard === 'ON');
+        let idPart = reqId ? "เลขประจำตัวประชาชน 13 หลัก, " : "";
+        return `อาศัยอำนาจตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 และตามประกาศจังหวัดเชียงใหม่ เรื่อง นโยบายการคุ้มครองข้อมูลส่วนบุคคล (Privacy Policy) จังหวัดเชียงใหม่\n\nสำนักงานจังหวัดเชียงใหม่ มีความจำเป็นต้องเก็บรวบรวมและใช้ข้อมูลส่วนบุคคลของท่าน ประกอบด้วย: ชื่อ-นามสกุล, ${idPart}เบอร์โทรศัพท์, อำเภอที่อยู่อาศัย และภาคส่วนที่ท่านสังกัด\n\nวัตถุประสงค์หลัก:\n1. เพื่อใช้ในการยืนยันตัวตนของผู้ให้ข้อมูลและป้องกันการให้ข้อมูลซ้ำซ้อน\n2. เพื่อใช้ติดต่อประสานงานกรณีต้องการรายละเอียดเพิ่มเติมเกี่ยวกับข้อเสนอแนะของท่าน\n3. เพื่อใช้ในการวิเคราะห์ข้อมูลเชิงสถิติแยกตามภาคส่วนและพื้นที่อำเภอ เพื่อนำไปประกอบการพัฒนา "${plan}" ให้สมบูรณ์ยิ่งขึ้น\n\nการคุ้มครองสิทธิ:\nข้อมูลของท่านจะถูกเก็บรักษาเป็นความลับในระบบที่มีการควบคุมการเข้าถึง และจะถูกทำลายทิ้งภายในระยะเวลาที่ระบุไว้ในนโยบายฯ ของจังหวัด ทั้งนี้ ท่านมีสิทธิในการขอเข้าถึง ขอรับสำเนา ขอแก้ไขข้อมูลให้ถูกต้อง หรือขอให้ลบทำลายข้อมูลส่วนบุคคลของท่านได้ ตามหลักเกณฑ์ที่กฎหมายกำหนด`;
+    }
+
+    function togglePdpaMode() {
+        let modeEl = document.querySelector('input[name="admin_pdpa_mode"]:checked');
+        if (!modeEl) return;
+        let mode = modeEl.value;
+        let customBox = document.getElementById('h_admin_pdpa_custom_text');
+        if (mode === 'CUSTOM') {
+            customBox.style.display = 'block';
+            if (customBox.value.trim() === "") customBox.value = getOfficialPdpaText(); 
+        } else {
+            customBox.style.display = 'none';
+        }
+    }
+    function updateAutoPdpaPreview() {}
+
+    // 🟢 Init System 🟢
+    function initSystem() { 
+      let loader = document.getElementById('globalLoader');
+      if (loader) loader.style.display = 'flex';
+      
+      Promise.all([ fetchSafe(SCRIPT_URL + '?action=getSettings'), fetchSafe(SCRIPT_URL + '?action=getDocs'), fetchSafe(SCRIPT_URL + '?action=getQA'), fetchSafe(SCRIPT_URL + '?action=getVideos') ])
+      .then(([settings, docsData, qaData, vidData]) => {
+         
+         form1Open = (settings.form1_status === 'OPEN'); form1Title = settings.form1_title || ""; form1Desc = settings.form1_desc || ""; form1Date = settings.form1_date || "";
+         hOpen = (settings.h_status === 'OPEN'); hTitle = settings.h_title || ""; hDesc = settings.h_desc || ""; hDate = settings.h_date || ""; hPlanName = settings.h_plan_name || ""; 
+         hRatingOpen = (settings.h_rating === 'ON'); currentScaleType = settings.h_scale_type || "5";
+         
+         hPdpaMode = settings.h_pdpa_mode || "AUTO"; hPdpaCustomText = settings.h_pdpa_custom_text || "";
+         if (hPdpaMode === "CUSTOM") {
+             let rdo = document.getElementById('pdpaCustom'); if(rdo) rdo.checked = true;
+             let cBox = document.getElementById('h_admin_pdpa_custom_text'); if(cBox) cBox.style.display = 'block';
+         } else {
+             let rdo = document.getElementById('pdpaAuto'); if(rdo) rdo.checked = true;
+             let cBox = document.getElementById('h_admin_pdpa_custom_text'); if(cBox) cBox.style.display = 'none';
+         }
+         setElVal('h_admin_pdpa_custom_text', hPdpaCustomText);
+
+         h_topics[0] = settings.h_s3_1 || ""; h_topics[1] = settings.h_s3_2 || ""; h_topics[2] = settings.h_s3_3 || "";
+         h_topics[3] = settings.h_s3_4 || ""; h_topics[4] = settings.h_s3_5 || ""; h_topics[5] = settings.h_s3_6 || "";
+         showNewBadge = (settings.show_new_badge === 'ON'); docs = docsData; qaList = qaData; videoList = vidData;
+
+         // 🟢 สร้าง Dropdown อำเภอ ให้ทั้งสองฟอร์ม 🟢
+         let distOptions = '<option value="" selected disabled>-- เลือกอำเภอ --</option>';
+         chiangMaiDistricts.forEach(d => { distOptions += `<option value="${d}">${d}</option>`; });
+         let f1DistSelect = document.getElementById('f_district'); if (f1DistSelect) f1DistSelect.innerHTML = distOptions;
+         let hDistSelect = document.getElementById('h_district'); if (hDistSelect) hDistSelect.innerHTML = distOptions;
+
+         // --- UI FORM 1 ---
+         setElText('disp_title_1', form1Title); setElText('disp_desc_1', form1Desc); setElText('disp_date_1', "📅 " + form1Date);
+         setElVal('admin_title_1', form1Title); setElVal('admin_subtitle_1', form1Desc); setElVal('admin_date_1', form1Date);
+         let swF1 = document.getElementById('swForm1'); if (swF1) swF1.checked = form1Open;
+         let b1 = document.getElementById('banner1'); let sb1 = document.getElementById('statusBadge1'); let bdg1 = document.getElementById('badge1');
+         if (form1Open) { if (b1) b1.classList.remove('closed'); if (sb1) sb1.style.display = 'none'; if (bdg1) bdg1.style.display = 'block'; } 
+         else { if (b1) b1.classList.add('closed'); if (sb1) sb1.style.display = 'inline-block'; if (bdg1) bdg1.style.display = 'none'; }
+
+         let f1_opts = [settings.f1_opt_1, settings.f1_opt_2, settings.f1_opt_3, settings.f1_opt_4, settings.f1_opt_5, settings.f1_opt_6, settings.f1_opt_7, settings.f1_opt_8].filter(Boolean);
+         let f1Select = document.getElementById('f_topic_select');
+         if (f1Select) { f1Select.innerHTML = '<option value="" selected disabled>-- กรุณาเลือก --</option>'; f1_opts.forEach(opt => { f1Select.innerHTML += `<option value="${opt}">${opt}</option>`; }); }
+         for (let i = 1; i <= 8; i++) setElVal('h_admin_f1_opt_' + i, settings['f1_opt_' + i]);
+
+         // --- UI FORM 2 ---
+         setElText('disp_h_title', hTitle); setElText('disp_title_2', hTitle); setElText('disp_desc_2', hDesc); setElText('disp_date_2', "📅 " + hDate); setElText('disp_h_plan_name', hPlanName);
+         setElVal('h_admin_title', hTitle); setElVal('h_admin_desc', hDesc); setElVal('h_admin_date', hDate); setElVal('h_admin_plan_name', hPlanName);
+         
+         let swHStatus = document.getElementById('swHearingStatus'); if (swHStatus) swHStatus.checked = hOpen;
+         let swHRating = document.getElementById('swHearingRating'); if (swHRating) swHRating.checked = hRatingOpen;
+         
+         let b2 = document.getElementById('banner2'); let sb2 = document.getElementById('statusBadge2'); let bdg2 = document.getElementById('badge2');
+         let hClosedMsg = document.getElementById('hearingClosedMsg'); let hFormCont = document.getElementById('yellowStep2');
+         if (hOpen) { if (b2) b2.classList.remove('closed'); if (sb2) sb2.style.display = 'none'; if (bdg2) bdg2.style.display = 'block'; if (hClosedMsg) hClosedMsg.style.display = 'none'; if (hFormCont) hFormCont.style.display = 'block'; } 
+         else { if (b2) b2.classList.add('closed'); if (sb2) sb2.style.display = 'inline-block'; if (bdg2) bdg2.style.display = 'none'; if (hClosedMsg) hClosedMsg.style.display = 'block'; if (hFormCont) hFormCont.style.display = 'none'; }
+
+         setElText('disp_h_q1', settings.h_q1); setElText('disp_h_q2', settings.h_q2); setElText('disp_h_q3', settings.h_q3); setElText('disp_h_q4', settings.h_q4);
+         setElVal('h_admin_q1', settings.h_q1); setElVal('h_admin_q2', settings.h_q2); setElVal('h_admin_q3', settings.h_q3); setElVal('h_admin_q4', settings.h_q4);
+
+         setElText('disp_lbl_name', settings.h_lbl_name); setElText('disp_lbl_district', settings.h_lbl_district); setElText('disp_lbl_sector', settings.h_lbl_sector); setElText('disp_lbl_idcard', settings.h_lbl_idcard);
+         setElVal('h_admin_lbl_name', settings.h_lbl_name); setElVal('h_admin_lbl_district', settings.h_lbl_district); setElVal('h_admin_lbl_sector', settings.h_lbl_sector); setElVal('h_admin_lbl_idcard', settings.h_lbl_idcard);
+
+         let sec_opts = [settings.h_sec_1, settings.h_sec_2, settings.h_sec_3, settings.h_sec_4, settings.h_sec_5, settings.h_sec_6].filter(Boolean);
+         let secSelect = document.getElementById('h_sector');
+         if (secSelect) { secSelect.innerHTML = '<option value="" selected disabled>-- เลือกภาคส่วน --</option>'; sec_opts.forEach(opt => { secSelect.innerHTML += `<option value="${opt}">${opt}</option>`; }); }
+         for (let i = 1; i <= 6; i++) setElVal('h_admin_sec_' + i, settings['h_sec_' + i]);
+
+         hReqIdcard = settings.h_req_idcard || "OFF";
+         let swId = document.getElementById('swReqIdCard'); if (swId) swId.checked = (hReqIdcard === 'ON');
+         let divIdCard = document.getElementById('div_h_idcard'); let inIdCard = document.getElementById('h_idcard');
+         if (divIdCard && inIdCard) { if (hReqIdcard === 'ON') { divIdCard.style.display = 'block'; inIdCard.setAttribute('required', 'required'); } else { divIdCard.style.display = 'none'; inIdCard.removeAttribute('required'); } }
+
+         setElText('lbl_dash_vision', settings.h_q2 || "ความเห็นต่อวิสัยทัศน์/เป้าหมาย"); setElText('lbl_dash_priority', settings.h_q4 || "สรุปประเด็นเร่งด่วนที่สุดที่ควรได้รับการแก้ไข");
+         setElText('disp_h_info_title', settings.h_info_title); setElText('disp_h_info_desc', settings.h_info_desc);
+         
+         let consentText = settings.h_consent_text || "ข้าพเจ้าได้อ่านและทำความเข้าใจรายละเอียดและเอกสารเบื้องต้นแล้ว";
+         setElHtml('disp_h_consent', consentText + ' <span class="text-danger">*</span>'); setElVal('h_admin_consent_text', consentText);
+
+         let hImgObj = document.getElementById('disp_h_img'); if (settings.h_img && hImgObj) { hImgObj.src = convertDriveUrl(settings.h_img); hImgObj.style.display = 'block'; } else if (hImgObj) { hImgObj.style.display = 'none'; }
+         let hSumObj = document.getElementById('disp_h_sum'); if (settings.h_sum && hSumObj) { hSumObj.href = settings.h_sum; hSumObj.style.display = 'inline-block'; } else if (hSumObj) { hSumObj.style.display = 'none'; }
+         let hFullObj = document.getElementById('disp_h_full'); if (settings.h_full && hFullObj) { hFullObj.href = settings.h_full; hFullObj.style.display = 'inline-block'; } else if (hFullObj) { hFullObj.style.display = 'none'; }
+
+         setElVal('h_admin_info_title', settings.h_info_title); setElVal('h_admin_info_desc', settings.h_info_desc); setElVal('h_admin_img', settings.h_img); setElVal('h_admin_sum', settings.h_sum); setElVal('h_admin_full', settings.h_full);
+         for (let i = 0; i < 6; i++) setElVal('h_admin_s3_' + (i+1), h_topics[i]);
+
+         let radioScale = document.getElementById('scale' + currentScaleType); if (radioScale) radioScale.checked = true;
+
+         let activeScale = scaleConfigs[currentScaleType] || scaleConfigs["5"];
+         let theadHtml = `<tr><th class="text-start">ประเด็นการพัฒนา</th>`; activeScale.labels.forEach(lbl => { theadHtml += `<th>${lbl}</th>`; }); theadHtml += `</tr>`; setElHtml('dynamic_topics_head', theadHtml);
+
+         let tableBodyHtml = '';
+         h_topics.forEach((topic, idx) => {
+             if (topic && topic.trim() !== "") {
+                 tableBodyHtml += `<tr><td class="text-start fw-bold" id="disp_h_s3_${idx+1}">${topic}</td>`;
+                 activeScale.labels.forEach(lbl => {
+                     let req = lbl === activeScale.labels[0] ? 'required' : '';
+                     tableBodyHtml += `<td><input class="form-check-input" type="radio" name="h_t${idx+1}" value="${lbl}" ${req}></td>`;
+                 }); tableBodyHtml += `</tr>`;
+             }
+         }); setElHtml('dynamic_topics_body', tableBodyHtml);
+
+         let p_topics = [settings.h_p_1, settings.h_p_2, settings.h_p_3, settings.h_p_4, settings.h_p_5, settings.h_p_6].filter(t => t);
+         let p_ph = settings.h_p_ph || "-- เลือกประเด็น --"; let pSelect = document.getElementById('h_priority');
+         if (pSelect) { pSelect.innerHTML = `<option value="" selected disabled>${p_ph}</option>`; p_topics.forEach(t => { pSelect.innerHTML += `<option value="${t}">${t}</option>`; }); }
+         
+         setElVal('h_admin_p_ph', settings.h_p_ph); for (let i = 1; i <= 6; i++) setElVal('h_admin_p_' + i, settings['h_p_' + i]);
+         let hVisionFb = document.getElementById('h_vision_fb'); if (hVisionFb) hVisionFb.placeholder = settings.h_fb_ph_1 || "";
+         let hStrategyFb = document.getElementById('h_strategy_fb'); if (hStrategyFb) hStrategyFb.placeholder = settings.h_fb_ph_2 || "";
+         let hFeedback = document.getElementById('h_feedback'); if (hFeedback) hFeedback.placeholder = settings.h_fb_ph_3 || "";
+
+         setElVal('h_admin_fb_ph_1', settings.h_fb_ph_1); setElVal('h_admin_fb_ph_2', settings.h_fb_ph_2); setElVal('h_admin_fb_ph_3', settings.h_fb_ph_3);
+         setElText('disp_video_title', settings.video_title); setElVal('admin_video_title', settings.video_title);
+         updateVideo(settings.video_url || ""); updateDashboard(settings.dash_url || "");
+         setElVal('admin_dash_main_url', settings.dash_main_url);
+         
+         let dMainLinkDiv = document.getElementById('dashMainLinkDiv'); let dMainLinkBtn = document.getElementById('dashMainLinkBtn');
+         if (settings.dash_main_url && dMainLinkDiv && dMainLinkBtn) { dMainLinkDiv.style.display = 'block'; dMainLinkBtn.href = settings.dash_main_url; } else if (dMainLinkDiv) { dMainLinkDiv.style.display = 'none'; }
+
+         let pr_imgs = [settings.pr_img_1, settings.pr_img_2, settings.pr_img_3, settings.pr_img_4, settings.pr_img_5].filter(img => img && img.trim() !== "");
+         for (let i = 1; i <= 5; i++) setElVal('h_admin_pr_' + i, settings['pr_img_' + i]);
+
+         if (pr_imgs.length > 0) {
+             let indicatorsHtml = ''; let innerHtml = '';
+             pr_imgs.forEach((imgUrl, idx) => {
+                 let finalUrl = convertDriveUrl(imgUrl); 
+                 indicatorsHtml += `<button type="button" data-bs-target="#prCarousel" data-bs-slide-to="${idx}" ${idx === 0 ? 'class="active"' : ''}></button>`;
+                 innerHtml += `<div class="carousel-item ${idx === 0 ? 'active' : ''}" data-bs-interval="4000"><img src="${finalUrl}"></div>`;
+             });
+             setElHtml('pr_indicators', indicatorsHtml); setElHtml('pr_inner', innerHtml);
+             let secPr = document.getElementById('sec-pr'); if (secPr) secPr.style.display = 'block';
+         } else { let secPr = document.getElementById('sec-pr'); if (secPr) secPr.style.display = 'none'; }
+
+         buildYearFilter(); filterDocs(); renderQA(); renderVideos();
+         if (loader) { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 300); }
+      }).catch(error => {
+          console.error("InitSystem Error:", error);
+          let loader = document.getElementById('globalLoader');
+          if (loader) { loader.style.display = 'flex'; loader.style.opacity = '1'; loader.innerHTML = `<div class='p-5 text-center'><h4 class='text-danger fw-bold'>❌ ไม่สามารถโหลดข้อมูลได้</h4><p class='text-muted'>${error.message}</p><button class='btn btn-primary mt-3' onclick='location.reload()'>รีเฟรชหน้าต่าง</button></div>`; }
+      });
+    }
+
+    function postData(data, callback) { 
+       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+       .then(r => r.text())
+       .then(text => { try { callback(JSON.parse(text)); } catch(error) { Swal.fire('ข้อผิดพลาดเซิร์ฟเวอร์', 'ข้อมูลตอบกลับไม่ถูกต้อง โปรดเช็คการ Deploy', 'error'); } })
+       .catch(error => { Swal.fire('ขาดการเชื่อมต่อ', 'โปรดตรวจสอบสัญญาณอินเทอร์เน็ตของคุณ', 'error'); }); 
+    }
+
+    function showFullVideoTitle(vidId) { 
+        let v = videoList.find(x => x.id === vidId); if (!v) return;
+        let descHtml = v.desc ? `<hr><div style="text-align:left; font-size:0.95rem; white-space:pre-wrap;" class="text-muted">${v.desc}</div>` : '';
+        Swal.fire({ title: 'รายละเอียดวิดีโอ', html: `<strong class="text-primary">${v.title}</strong>${descHtml}`, icon: 'info', confirmButtonText: 'ปิด' }); 
+    }
+
+    function updateVideo(url) { 
+        let videoId = extractYouTubeID(url); let embedUrl = videoId ? "https://www.youtube.com/embed/" + videoId : ""; 
+        let frame = document.getElementById('main_video_frame'); if (frame) frame.src = embedUrl; setElVal('admin_video_url', url);
+    }
+    function extractYouTubeID(url) { if (!url) return null; var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/; var match = url.match(regExp); return (match && match[2].length == 11) ? match[2] : null; }
+
+    function updateDashboard(url) { 
+        let ph = document.getElementById('dash_placeholder'); let frame = document.getElementById('main_dash_frame'); setElVal('admin_dash_url', url);
+        if (url && url.length > 5) { if (ph) ph.style.display = 'none'; if (frame) { frame.style.display = 'block'; frame.src = url; } } 
+        else { if (ph) ph.style.display = 'flex'; if (frame) frame.style.display = 'none'; } 
+    }
+
+    function toggleSidebar() { 
+        let sb = document.getElementById('sidebar'); let overlay = document.getElementById('sidebarOverlay');
+        if (sb) sb.classList.toggle('active'); if (overlay) overlay.classList.toggle('active');
+    }
+
+    function showPage(id) {
+      let pages = ['page-home','page-docs','page-calendar','page-qa', 'page-videos', 'page-admin-dash'];
+      pages.forEach(page => { let p = document.getElementById(page); if (p) p.style.display = 'none'; });
+      let targetPage = document.getElementById('page-' + id); if (targetPage) targetPage.style.display = 'block';
+      document.querySelectorAll('.nav-link-main').forEach(el => el.classList.remove('active'));
+      if (id !== 'admin-dash') { let menuLink = document.getElementById('menu-' + id); if (menuLink) menuLink.classList.add('active'); }
+      if (id === 'docs') filterDocs(); if (id === 'admin-dash') loadDashboard();
+      window.scrollTo(0,0);
+      if (window.innerWidth <= 992) { let sb = document.getElementById('sidebar'); let overlay = document.getElementById('sidebarOverlay'); if (sb) sb.classList.remove('active'); if (overlay) overlay.classList.remove('active'); }
+    }
+    function scrollToId(id) { showPage('home'); setTimeout(() => { let target = document.getElementById(id); if (target) target.scrollIntoView({behavior:'smooth'}); }, 200); }
+
+    function saveGeneralConfig() {
+       let vTitle = getVal('admin_video_title'); let vUrl = getVal('admin_video_url'); let dUrl = getVal('admin_dash_url'); let dMainUrl = getVal('admin_dash_main_url');
+       if (!vTitle) { Swal.fire('แจ้งเตือน', 'กรุณาใส่ชื่อวิดีโอ', 'warning'); return; }
+       Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       postData({ action: 'updateGeneralConfig', token: adminToken, vTitle: vTitle, video: vUrl, dash: dUrl, dashMain: dMainUrl, pr_img_1: getVal('h_admin_pr_1'), pr_img_2: getVal('h_admin_pr_2'), pr_img_3: getVal('h_admin_pr_3'), pr_img_4: getVal('h_admin_pr_4'), pr_img_5: getVal('h_admin_pr_5') }, (res) => { if (res.status === 'SUCCESS') { Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', timer: 1500, showConfirmButton: false }).then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } });
+    }
+    function saveFormConfig() {
+       let titleVal = getVal('admin_title_1'); let descVal = getVal('admin_subtitle_1'); let dateVal = getVal('admin_date_1'); let swF1 = document.getElementById('swForm1'); let status = (swF1 && swF1.checked) ? 'OPEN' : 'CLOSED';
+       Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       postData({ action: 'updateFormConfig', token: adminToken, key: 'FORM_1', title: titleVal, subtitle: descVal, dateText: dateVal, status: status, f1_opt_1: getVal('h_admin_f1_opt_1'), f1_opt_2: getVal('h_admin_f1_opt_2'), f1_opt_3: getVal('h_admin_f1_opt_3'), f1_opt_4: getVal('h_admin_f1_opt_4'), f1_opt_5: getVal('h_admin_f1_opt_5'), f1_opt_6: getVal('h_admin_f1_opt_6'), f1_opt_7: getVal('h_admin_f1_opt_7'), f1_opt_8: getVal('h_admin_f1_opt_8') }, (res) => { if (res.status === 'SUCCESS') { Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', timer: 1500, showConfirmButton: false }).then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } });
+    }
+    function saveHearingConfig() {
+       let scaleRadio = document.querySelector('input[name="admin_scale_type"]:checked'); let selectedScale = scaleRadio ? scaleRadio.value : "5"; let pdpaModeRadio = document.querySelector('input[name="admin_pdpa_mode"]:checked'); let selectedPdpaMode = pdpaModeRadio ? pdpaModeRadio.value : "AUTO"; let swStatus = document.getElementById('swHearingStatus'); let swRating = document.getElementById('swHearingRating'); let swIdCard = document.getElementById('swReqIdCard');
+       let payload = { action: 'updateHearingConfig', token: adminToken, h_title: getVal('h_admin_title'), h_desc: getVal('h_admin_desc'), h_date: getVal('h_admin_date'), h_plan_name: getVal('h_admin_plan_name'), h_status: (swStatus && swStatus.checked) ? 'OPEN' : 'CLOSED', h_rating: (swRating && swRating.checked) ? 'ON' : 'OFF', h_img: getVal('h_admin_img'), h_sum: getVal('h_admin_sum'), h_full: getVal('h_admin_full'), h_info_title: getVal('h_admin_info_title'), h_info_desc: getVal('h_admin_info_desc'), h_consent_text: getVal('h_admin_consent_text'), h_pdpa_mode: selectedPdpaMode, h_pdpa_custom_text: getVal('h_admin_pdpa_custom_text'), h_q1: getVal('h_admin_q1'), h_q2: getVal('h_admin_q2'), h_q3: getVal('h_admin_q3'), h_q4: getVal('h_admin_q4'), h_req_idcard: (swIdCard && swIdCard.checked) ? 'ON' : 'OFF', h_lbl_idcard: getVal('h_admin_lbl_idcard'), h_lbl_name: getVal('h_admin_lbl_name'), h_lbl_district: getVal('h_admin_lbl_district'), h_lbl_sector: getVal('h_admin_lbl_sector'), h_sec_1: getVal('h_admin_sec_1'), h_sec_2: getVal('h_admin_sec_2'), h_sec_3: getVal('h_admin_sec_3'), h_sec_4: getVal('h_admin_sec_4'), h_sec_5: getVal('h_admin_sec_5'), h_sec_6: getVal('h_admin_sec_6'), h_scale_type: selectedScale, h_s3_1: getVal('h_admin_s3_1'), h_s3_2: getVal('h_admin_s3_2'), h_s3_3: getVal('h_admin_s3_3'), h_s3_4: getVal('h_admin_s3_4'), h_s3_5: getVal('h_admin_s3_5'), h_s3_6: getVal('h_admin_s3_6'), h_p_ph: getVal('h_admin_p_ph'), h_p_1: getVal('h_admin_p_1'), h_p_2: getVal('h_admin_p_2'), h_p_3: getVal('h_admin_p_3'), h_p_4: getVal('h_admin_p_4'), h_p_5: getVal('h_admin_p_5'), h_p_6: getVal('h_admin_p_6'), h_fb_ph_1: getVal('h_admin_fb_ph_1'), h_fb_ph_2: getVal('h_admin_fb_ph_2'), h_fb_ph_3: getVal('h_admin_fb_ph_3') };
+       Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       postData(payload, (res) => { if (res.status === 'SUCCESS') { Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', timer: 1500, showConfirmButton: false }).then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } });
+    }
+
+    function openDocModal() { document.getElementById('adminDocForm').reset(); setElVal('doc_id', ''); setElText('docModalTitle', 'เพิ่มเอกสารใหม่'); let bdgDiv = document.getElementById('newBadgeToggleDiv'); let hideBdg = document.getElementById('doc_hide_new_badge'); if (bdgDiv) bdgDiv.style.display = 'block'; if (hideBdg) hideBdg.checked = false; let m = bootstrap.Modal.getInstance(document.getElementById('adminDocModal')) || new bootstrap.Modal(document.getElementById('adminDocModal')); m.show(); }
+    function editDoc(id) { let d = docs.find(x => x.id === id); if (!d) return; setElVal('doc_id', d.id); setElVal('doc_title', d.title); setElVal('doc_year', d.year || ''); setElVal('doc_desc', d.desc); setElVal('doc_link', d.link); setElVal('doc_cat', d.type); setElVal('doc_ai_status', d.ai_status || 'ON'); setElVal('doc_order', d.order == 999 ? '' : d.order); let pin = document.getElementById('doc_is_pinned'); let imp = document.getElementById('doc_is_important'); if (pin) pin.checked = d.is_pinned; if (imp) imp.checked = d.is_important; let bdgDiv = document.getElementById('newBadgeToggleDiv'); let hideBdg = document.getElementById('doc_hide_new_badge'); if (bdgDiv) bdgDiv.style.display = 'none'; if (hideBdg) hideBdg.checked = (d.hide_new_badge === true); setElText('docModalTitle', 'แก้ไขเอกสาร'); let m = bootstrap.Modal.getInstance(document.getElementById('adminDocModal')) || new bootstrap.Modal(document.getElementById('adminDocModal')); m.show(); }
+    function submitDocument(e) { e.preventDefault(); Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() }); let pin = document.getElementById('doc_is_pinned'); let imp = document.getElementById('doc_is_important'); let hideBdg = document.getElementById('doc_hide_new_badge'); let payload = { action: 'saveDoc', token: adminToken, id: getVal('doc_id'), title: getVal('doc_title'), desc: getVal('doc_desc'), link: getVal('doc_link'), type: getVal('doc_cat'), ai_status: getVal('doc_ai_status'), year: getVal('doc_year'), order: getVal('doc_order'), is_pinned: pin ? pin.checked : false, is_important: imp ? imp.checked : false, hide_new_badge: hideBdg ? hideBdg.checked : false }; postData(payload, (res) => { if (res.status === 'SUCCESS') { let m = bootstrap.Modal.getInstance(document.getElementById('adminDocModal')); if (m) m.hide(); Swal.fire('สำเร็จ', 'บันทึกข้อมูลแล้ว', 'success').then(() => initSystem()); } else { Swal.fire('Error', res.message, 'error'); } }); }
+    function deleteDoc(id) { Swal.fire({ title: 'ลบเอกสาร?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ใช่', cancelButtonText: 'ยกเลิก' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() }); postData({ action: 'deleteDoc', token: adminToken, id: id }, (res) => { if (res.status === 'SUCCESS') { Swal.fire('ลบเรียบร้อย', '', 'success').then(() => initSystem()); } else { Swal.fire('Error', res.message, 'error'); } }); } }); }
+    function buildYearFilter() { let years = new Set(); docs.forEach(d => { if (d.year !== undefined && d.year !== null && d.year !== "") { let yearStr = d.year.toString().trim(); let parts = yearStr.split('-'); if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) { for (let y = parseInt(parts[0]); y <= parseInt(parts[1]); y++) years.add(y.toString()); } else { years.add(yearStr); } } }); let html = '<option value="All">ทุกปีงบประมาณ</option>'; let sortedYears = Array.from(years).sort((a,b) => b - a); sortedYears.forEach(y => { html += `<option value="${y}">ปี ${y}</option>`; }); setElHtml('filterYear', html); }
+    function sortDocsLogic(a, b) { if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1; let getYearMax = (y) => { if (!y) return 0; let p = y.toString().split('-'); return p.length === 2 ? parseInt(p[1]) : parseInt(y); }; let yA = getYearMax(a.year); let yB = getYearMax(b.year); if (yA !== yB) return yB - yA; let oA = a.order || 999; let oB = b.order || 999; if (oA !== oB) return oA - oB; return new Date(b.created) - new Date(a.created); }
+    function filterDocs() { let searchText = getVal('searchDoc').toLowerCase(); let catFilter = getVal('filterCat'); let yearFilter = getVal('filterYear'); filteredDocs = docs.filter(d => { let mTxt = d.title.toLowerCase().includes(searchText) || (d.desc && d.desc.toLowerCase().includes(searchText)); let mCat = (catFilter === 'All') || (d.type === catFilter); let mYr = (yearFilter === 'All'); if (!mYr && d.year) { let docYr = d.year.toString().trim(); let p = docYr.split('-'); if (p.length === 2) mYr = (parseInt(yearFilter) >= parseInt(p[0]) && parseInt(yearFilter) <= parseInt(p[1])); else mYr = (yearFilter === docYr); } return mTxt && mCat && mYr; }); filteredDocs.sort(sortDocsLogic); currentPage = 1; renderDocs(); }
+    function clearSearch() { setElVal('searchDoc', ''); setElVal('filterCat', 'All'); setElVal('filterYear', 'All'); filterDocs(); }
+    function getCatBadge(type) { let label = type; let colorClass = 'bg-secondary'; switch(type) { case 'General': label = 'เอกสารทั่วไป'; break; case 'Plan': label = 'แผนพัฒนา'; colorClass = 'bg-primary'; break; case 'Report': label = 'รายงานผล'; colorClass = 'bg-success'; break; case 'Announcement': label = 'ประกาศ/คำสั่ง'; colorClass = 'bg-warning text-dark'; break; } return `<span class="badge ${colorClass}">${label}</span>`; }
+    function renderDocs() { let html = ''; if (filteredDocs.length === 0) { html = '<div class="text-center text-muted py-5">ไม่พบเอกสาร</div>'; setElHtml('pagination', ''); } else { let start = (currentPage - 1) * itemsPerPage; let end = start + itemsPerPage; let paginatedItems = filteredDocs.slice(start, end); paginatedItems.forEach(doc => { let icon = 'description'; let color = 'text-primary'; if (doc.link.includes('drive')) { icon = 'add_to_drive'; color = 'text-success'; } else if (doc.link.includes('.pdf')) { icon = 'picture_as_pdf'; color = 'text-danger'; } let dateStr = "อัปเดต: " + formatDate(doc.created); let badges = ''; if (doc.is_pinned) badges += `<span class="badge badge-pin me-2">📌 ปักหมุด</span>`; if (doc.is_important) badges += `<span class="badge bg-danger me-2">⭐ สำคัญ</span>`; let ageDays = (new Date() - new Date(doc.created)) / (1000 * 60 * 60 * 24); if (ageDays < 14 && doc.hide_new_badge !== true) badges += `<span class="badge-custom-new me-2">NEW</span>`; let catBadge = getCatBadge(doc.type); let yrBadge = doc.year ? `<span class="badge bg-info text-dark ms-2"><i class="material-icons align-middle" style="font-size: 11px;">event</i> ปีงบประมาณ ${doc.year}</span>` : ''; let editBtn = isAdmin ? `<button class="btn btn-sm btn-outline-warning ms-2" onclick="editDoc('${doc.id}')">แก้ไข</button>` : ''; let deleteBtn = isAdmin ? `<button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteDoc('${doc.id}')">ลบ</button>` : ''; let chatBtn = doc.ai_status === 'OFF' ? `<button class="btn btn-sm btn-secondary text-white opacity-50" style="cursor:not-allowed;"><i class="material-icons align-middle" style="font-size:16px;">smart_toy</i> ปิด AI</button>` : `<button class="btn btn-sm btn-info text-white" onclick="openChat('${doc.id}')"><i class="material-icons align-middle" style="font-size:16px;">smart_toy</i> ถาม AI</button>`; html += `<div class="list-group-item list-group-item-action d-flex align-items-start py-4 px-3 border-bottom"><i class="material-icons fs-2 me-4 mt-1 ${color}">${icon}</i><div class="flex-grow-1"><a href="${doc.link}" target="_blank" class="text-decoration-none text-dark"><div class="mb-1 d-flex align-items-center flex-wrap">${badges}</div><h5 class="mb-2 fw-bold">${doc.title}</h5><div class="mb-2 d-flex flex-wrap align-items-center">${catBadge} ${yrBadge} <span class="text-muted small ms-md-2 mt-2 mt-md-0 d-block d-md-inline w-100 w-md-auto">${doc.desc || ""}</span></div><small class="text-secondary">${dateStr}</small></a></div><div class="d-flex align-items-center ms-3">${chatBtn} ${editBtn} ${deleteBtn}</div></div>`; }); renderPagination(); } setElHtml('docListContainer', html); }
+    function renderPagination() { let totalPages = Math.ceil(filteredDocs.length / itemsPerPage); let html = ''; if (totalPages > 1) { html += `<div class="page-btn ${currentPage===1 ? 'disabled' : ''}" onclick="changePage(${currentPage-1})">«</div>`; for (let i = 1; i <= totalPages; i++) { if (i === 1 || i === totalPages || (i >= currentPage-1 && i <= currentPage+1)) { html += `<div class="page-btn ${i===currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</div>`; } else if (i === currentPage-2 || i === currentPage+2) { html += `<span class="px-2">...</span>`; } } html += `<div class="page-btn ${currentPage===totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage+1})">»</div>`; } setElHtml('pagination', html); }
+    function changePage(p) { let totalPages = Math.ceil(filteredDocs.length / itemsPerPage); if (p < 1 || p > totalPages) return; currentPage = p; renderDocs(); }
+    function formatDate(isoStr) { if (!isoStr) return ""; let d = new Date(isoStr); return d.toLocaleDateString('th-TH') + ' ' + d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}); }
+
+    function loginToggle() {
+       if (isAdmin) return logoutSystem();
+       Swal.fire({ title: 'เข้าสู่ระบบ Admin', html: '<input id="swal-u" class="swal2-input" placeholder="Username"><input id="swal-p" class="swal2-input" type="password" placeholder="Password">', showCancelButton: true, preConfirm: () => [getVal('swal-u'), getVal('swal-p')] }).then((result) => { 
+           if (result.isConfirmed) { 
+               if (!result.value[0] || !result.value[1]) return Swal.fire('แจ้งเตือน', 'กรุณากรอกให้ครบ', 'warning');
+               Swal.fire({ title: 'กำลังตรวจสอบ...', didOpen: () => Swal.showLoading() }); 
+               postData({ action: 'login', username: result.value[0], password: result.value[1] }, (data) => { 
+                   if (data.status === 'SUCCESS') { adminToken = result.value[1]; setAdminMode(true); Swal.fire('เข้าสู่ระบบสำเร็จ', '', 'success'); } 
+                   else { Swal.fire('เข้าสู่ระบบไม่สำเร็จ', 'ข้อมูลไม่ถูกต้อง', 'error'); } 
+               }); 
+           } 
+       });
+    }
+    function logoutSystem() { Swal.fire({ title: 'ต้องการออกจากระบบ?', showCancelButton: true, confirmButtonText: 'ออกจากระบบ' }).then((result) => { if (result.isConfirmed) { adminToken = ""; setAdminMode(false); Swal.fire('ออกจากระบบแล้ว', '', 'success'); } }); }
+    function setAdminMode(status) { isAdmin = status; let adminPanel = document.getElementById('adminHomePanel'); if (adminPanel) adminPanel.style.display = status ? 'block' : 'none'; let blockElements = ['adminMenuSection']; blockElements.forEach(id => { let element = document.getElementById(id); if (element) element.style.display = status ? 'block' : 'none'; }); let flexElements = ['adminDocBtnGroup', 'adminVideoBtnGroup', 'adminQABtnGroup']; flexElements.forEach(id => { let element = document.getElementById(id); if (element) element.style.display = status ? 'flex' : 'none'; }); filterDocs(); renderQA(); renderVideos(); }
+
+    function handleBannerClick(num) { 
+        if (num === 1) { 
+            if (form1Open) { 
+                setElText('formTitle', form1Title); setElVal('f_topic_type', form1Title);
+                let topicSel = document.getElementById('topicSelectDiv'); if (topicSel) topicSel.style.display = 'block';
+                document.getElementById('pinkStep1').style.display = 'block'; document.getElementById('pinkStep2').style.display = 'none';
+                let pinkChk = document.getElementById('pinkCheckPdpa'); if (pinkChk) pinkChk.checked = false;
+                let m = bootstrap.Modal.getInstance(document.getElementById('formModal')) || new bootstrap.Modal(document.getElementById('formModal')); m.show();
+            } else { Swal.fire('ปิดรับแจ้งชั่วคราว'); } 
+        } else if (num === 2) { 
+            if (hOpen) { 
+                let pdpaTextToDisplay = (hPdpaMode === "CUSTOM") ? hPdpaCustomText : getOfficialPdpaText();
+                setElText('disp_yellow_pdpa_text', pdpaTextToDisplay);
+                document.getElementById('yellowStep1').style.display = 'block'; document.getElementById('yellowStep2').style.display = 'none';
+                let yellowChk = document.getElementById('yellowCheckPdpa'); if (yellowChk) yellowChk.checked = false;
+                let m = bootstrap.Modal.getInstance(document.getElementById('hearingModal')) || new bootstrap.Modal(document.getElementById('hearingModal')); m.show();
+            } else { Swal.fire('ปิดรับฟังความเห็น'); } 
+        } 
+    }
+    
+    function openVideoModal() { setElVal('vid_id', ''); setElVal('vid_title', ''); setElVal('vid_desc', ''); setElVal('vid_link', ''); setElVal('vid_order', ''); setElText('vidModalTitle', 'เพิ่มวิดีโอ'); let m = bootstrap.Modal.getInstance(document.getElementById('adminVideoModal')) || new bootstrap.Modal(document.getElementById('adminVideoModal')); m.show(); }
+    function openQAModal() { setElVal('qa_id', ''); setElVal('qa_emoji', '❓'); setElVal('qa_question', ''); setElVal('qa_answer', ''); setElText('qaModalTitle', 'เพิ่ม Q&A'); let m = bootstrap.Modal.getInstance(document.getElementById('adminQAModal')) || new bootstrap.Modal(document.getElementById('adminQAModal')); m.show(); }
+    function editVideo(id) { let v = videoList.find(x => x.id === id); if (!v) return; setElVal('vid_id', v.id); setElVal('vid_title', v.title); setElVal('vid_desc', v.desc || ""); setElVal('vid_link', v.link); setElVal('vid_order', v.order == 999 ? "" : v.order); setElText('vidModalTitle', 'แก้ไขวิดีโอ'); let m = bootstrap.Modal.getInstance(document.getElementById('adminVideoModal')) || new bootstrap.Modal(document.getElementById('adminVideoModal')); m.show(); }
+    function submitVideo(e) { e.preventDefault(); Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() }); postData({ action: 'saveVideo', token: adminToken, id: getVal('vid_id'), title: getVal('vid_title'), desc: getVal('vid_desc'), link: getVal('vid_link'), order: getVal('vid_order') }, (res) => { if (res.status === 'SUCCESS') { let m = bootstrap.Modal.getInstance(document.getElementById('adminVideoModal')); if (m) m.hide(); Swal.fire('บันทึกวิดีโอแล้ว', '', 'success').then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } }); }
+    function deleteVideo(id) { Swal.fire({ title: 'ลบวิดีโอ?', icon: 'warning', showCancelButton: true }).then((r) => { if (r.isConfirmed) { Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() }); postData({ action: 'deleteVideo', token: adminToken, id: id }, (res) => { if (res.status === 'SUCCESS') { Swal.fire('ลบเรียบร้อย', '', 'success').then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } }); } }); }
+    function renderVideos() { let h = ''; if (videoList.length === 0) { h = '<div class="text-center text-muted py-5 w-100">ยังไม่มีวิดีโอ</div>'; } else { videoList.forEach(vid => { let vId = extractYouTubeID(vid.link); let embedUrl = vId ? "https://www.youtube.com/embed/" + vId : ""; let adm = isAdmin ? `<div class="p-2 bg-light border-top d-flex justify-content-between"><small class="fw-bold text-muted">ลำดับ: ${vid.order==999?'':vid.order}</small><div><button class="btn btn-sm btn-outline-warning me-1" onclick="editVideo('${vid.id}')">แก้</button><button class="btn btn-sm btn-outline-danger" onclick="deleteVideo('${vid.id}')">ลบ</button></div></div>` : ''; h += `<div class="col-md-6 col-lg-4"><div class="video-card"><div class="video-title-bar" onclick="showFullVideoTitle('${vid.id}')" title="คลิกเพื่อดูรายละเอียด"><div class="video-title-text">${vid.title}</div><i class="material-icons text-primary" style="font-size: 18px; cursor: pointer;">info</i></div><div class="ratio ratio-16x9"><iframe src="${embedUrl}" allowfullscreen></iframe></div>${adm}</div></div>`; }); } setElHtml('videoListContainer', h); }
+    function editQA(id) { let q = qaList.find(x => x.id === id); if (!q) return; setElVal('qa_id', q.id); setElVal('qa_emoji', q.emoji||'❓'); setElVal('qa_question', q.q); setElVal('qa_answer', q.a); setElText('qaModalTitle', 'แก้ไข Q&A'); let m = bootstrap.Modal.getInstance(document.getElementById('adminQAModal')) || new bootstrap.Modal(document.getElementById('adminQAModal')); m.show(); }
+    function submitQA(e) { e.preventDefault(); Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() }); postData({ action: 'saveQA', token: adminToken, id: getVal('qa_id'), q: getVal('qa_question'), a: getVal('qa_answer'), emoji: getVal('qa_emoji') }, (res) => { if (res.status === 'SUCCESS') { let m = bootstrap.Modal.getInstance(document.getElementById('adminQAModal')); if (m) m.hide(); Swal.fire('บันทึกเรียบร้อย', '', 'success').then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } }); }
+    function deleteQA(id) { Swal.fire({ title: 'ลบถาม-ตอบ?', icon: 'warning', showCancelButton: true }).then((r) => { if (r.isConfirmed) { Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() }); postData({ action: 'deleteQA', token: adminToken, id: id }, (res) => { if (res.status === 'SUCCESS') { Swal.fire('ลบเรียบร้อย', '', 'success').then(()=>initSystem()); } else { Swal.fire('Error', res.message, 'error'); } }); } }); }
+    function renderQA() { let h = ''; if (qaList.length === 0) { h = '<div class="text-center text-muted py-5">ยังไม่มีข้อมูล</div>'; } else { qaList.forEach((item, index) => { let adm = isAdmin ? `<div class="mt-2 text-end border-top pt-2"><button class="btn btn-sm btn-outline-warning ms-2" onclick="editQA('${item.id}')">แก้</button> <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteQA('${item.id}')">ลบ</button></div>` : ''; h += `<div class="accordion-item border rounded mb-3 shadow-sm"><h2 class="accordion-header"><button class="accordion-button collapsed fw-bold text-start" type="button" data-bs-toggle="collapse" data-bs-target="#qa${index}"><span class="me-2 fs-5">${item.emoji}</span> ${item.q}</button></h2><div id="qa${index}" class="accordion-collapse collapse" data-bs-parent="#accQA"><div class="accordion-body bg-light">${item.a.replace(/\n/g,'<br>')}${adm}</div></div></div>`; }); } setElHtml('accQA', h); }
+
+    function openChat(docId) { let doc = docs.find(d => d.id === docId); if (!doc) return; currentDocLink = doc.link; setElHtml('chatHistory', `<div class="chat-ai chat-msg">สวัสดีครับ! ถามข้อมูลเกี่ยวกับเอกสาร <strong>"${doc.title}"</strong> ได้เลยครับ 😊<br><br><small class="text-danger">⚠️ กรุณาตรวจสอบข้อมูลก่อนนำไปใช้เสมอ</small></div>`); let m = bootstrap.Modal.getInstance(document.getElementById('chatModal')) || new bootstrap.Modal(document.getElementById('chatModal')); m.show(); }
+    function sendChat() { let input = document.getElementById('chatInput'); if (!input) return; let question = input.value.trim(); if (!question) return; let history = document.getElementById('chatHistory'); if (!history) return; history.innerHTML += `<div class="chat-user chat-msg">${question}</div>`; input.value = ''; history.scrollTop = history.scrollHeight; let loadingId = 'loading_' + Date.now(); history.innerHTML += `<div id="${loadingId}" class="chat-ai chat-msg typing-indicator"><span></span><span></span><span></span></div>`; history.scrollTop = history.scrollHeight; fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'chatWithAI', link: currentDocLink, question: question }) }).then(r => r.text()).then(text => { let loadingEl = document.getElementById(loadingId); if (loadingEl) loadingEl.remove(); let data; try { data = JSON.parse(text); } catch(e) { data = {status: 'ERROR', answer: 'ระบบ AI ขัดข้องชั่วคราว'}; } let answer = data.status === 'SUCCESS' ? data.answer : "❌ " + data.answer; answer = answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); history.innerHTML += `<div class="chat-ai chat-msg">${answer}</div>`; history.scrollTop = history.scrollHeight; }).catch(e => { let loadingEl = document.getElementById(loadingId); if (loadingEl) loadingEl.remove(); history.innerHTML += `<div class="chat-ai chat-msg text-danger">การเชื่อมต่อล้มเหลว โปรดตรวจสอบอินเทอร์เน็ต</div>`; }); }
+
+    // 🟢 ระบบบันทึกข้อมูล ฟอร์มรับฟังความเห็น (สีเหลือง) 🟢
+    function submitHearing(e) { 
+        e.preventDefault(); 
+        let btn = document.getElementById('btnSubmitHearing'); if (!btn) return;
+        let oldText = btn.innerText; btn.disabled = true; btn.innerText = 'กำลังส่ง...'; 
+        
+        let idcardVal = "";
+        if (hReqIdcard === 'ON') {
+            idcardVal = getVal('h_idcard');
+            if (!checkThaiID(idcardVal)) {
+                Swal.fire('ข้อผิดพลาด', 'เลขประจำตัวประชาชน 13 หลัก ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง', 'error');
+                btn.disabled = false; btn.innerText = oldText; return;
+            }
+        }
+
+        let districtVal = getVal('h_district');
+        if (!chiangMaiDistricts.includes(districtVal)) {
+            Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกชื่ออำเภอจากรายการที่กำหนดให้เท่านั้น', 'warning');
+            btn.disabled = false; btn.innerText = oldText; return;
+        }
+
+        let t1Val = document.querySelector('input[name="h_t1"]:checked') ? document.querySelector('input[name="h_t1"]:checked').value : "";
+        let t2Val = document.querySelector('input[name="h_t2"]:checked') ? document.querySelector('input[name="h_t2"]:checked').value : "";
+        let t3Val = document.querySelector('input[name="h_t3"]:checked') ? document.querySelector('input[name="h_t3"]:checked').value : "";
+        let t4Val = document.querySelector('input[name="h_t4"]:checked') ? document.querySelector('input[name="h_t4"]:checked').value : "";
+        let t5Val = document.querySelector('input[name="h_t5"]:checked') ? document.querySelector('input[name="h_t5"]:checked').value : "";
+        let t6Val = document.querySelector('input[name="h_t6"]:checked') ? document.querySelector('input[name="h_t6"]:checked').value : "";
+
+        postData({ 
+            action: 'saveHearing', plan_name: hPlanName, name: getVal('h_name'), district: districtVal, sector: getVal('h_sector'), 
+            idcard: idcardVal, phone: getVal('h_phone'), vision: document.querySelector('input[name="h_vision"]:checked')?.value || "", 
+            vision_fb: getVal('h_vision_fb'), t1: t1Val, t2: t2Val, t3: t3Val, t4: t4Val, t5: t5Val, t6: t6Val,
+            strategy_fb: getVal('h_strategy_fb'), priority: getVal('h_priority'), feedback: getVal('h_feedback') 
+        }, (res) => { 
+            btn.disabled = false; btn.innerText = oldText; 
+            if (res.status === 'CLOSED_ERROR') {
+                Swal.fire('ไม่สามารถดำเนินการได้', 'ระบบอาจปิดรับข้อมูลแล้ว', 'error'); hOpen = false; 
+                let b2 = document.getElementById('banner2'); let sb2 = document.getElementById('statusBadge2'); let bdg2 = document.getElementById('badge2');
+                if (b2) b2.classList.add('closed'); if (sb2) sb2.style.display = 'inline-block'; if (bdg2) bdg2.style.display = 'none'; 
+                let m = bootstrap.Modal.getInstance(document.getElementById('hearingModal')); if (m) m.hide();
+            } else if (res.status === 'SUCCESS') { 
+                e.target.reset(); 
+                let m = bootstrap.Modal.getInstance(document.getElementById('hearingModal')); if (m) m.hide(); 
+                if (hRatingOpen) { let rModal = bootstrap.Modal.getInstance(document.getElementById('ratingModal')) || new bootstrap.Modal(document.getElementById('ratingModal')); rModal.show(); } 
+                else { Swal.fire('สำเร็จ', 'ส่งความเห็นเรียบร้อย', 'success'); } 
+            } else { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); } 
+        }); 
+    }
+
+    // 🟢 ระบบบันทึกข้อมูล ฟอร์มเรื่องแจ้งทั่วไป (สีชมพู) 🟢
+    function submitForm(e) { 
+        e.preventDefault(); 
+        let btn = e.target.querySelector('button[type="submit"]'); let oldText = btn.innerText; btn.disabled = true; btn.innerText = 'กำลังส่ง...'; 
+        
+        let districtVal = getVal('f_district');
+        if (!chiangMaiDistricts.includes(districtVal)) {
+            Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกอำเภอจากรายการ', 'warning');
+            btn.disabled = false; btn.innerText = oldText; return;
+        }
+
+        let topicVal = getVal('f_topic_type'); let topicKey = (topicVal === form1Title) ? "FORM_1_STATUS" : "FORM_2_STATUS"; let finalTopic = topicVal;
+        let topicSel = document.getElementById('topicSelectDiv');
+        if (topicSel && topicSel.style.display === 'block') {
+            let select = document.getElementById('f_topic_select');
+            if (select && select.value === "") { Swal.fire('กรุณาเลือกหมวดหมู่'); btn.disabled = false; btn.innerText = oldText; return; }
+            finalTopic = select.value + " (" + topicVal + ")";
+        }
+        postData({ 
+            action:'saveForm', name: getVal('f_name'), contact: getVal('f_contact'), detail: getVal('f_detail'), 
+            district: districtVal, topic: finalTopic, topicKey: topicKey 
+        }, (res) => { 
+            btn.disabled = false; btn.innerText = oldText; 
+            if (res.status === 'CLOSED_ERROR') {
+                Swal.fire('ไม่สามารถดำเนินการได้', 'ระบบอาจปิดรับข้อมูลแล้ว', 'error');
+                if (topicKey === "FORM_1_STATUS") { form1Open = false; }
+                let b1 = document.getElementById('banner1'); let sb1 = document.getElementById('statusBadge1'); let bdg1 = document.getElementById('badge1');
+                if (b1) b1.classList.add('closed'); if (sb1) sb1.style.display = 'inline-block'; if (bdg1) bdg1.style.display = 'none'; 
+                let m = bootstrap.Modal.getInstance(document.getElementById('formModal')); if (m) m.hide();
+            } else if (res.status === 'SUCCESS') { 
+                Swal.fire('สำเร็จ','ขอบคุณสำหรับข้อมูล ทางเราได้รับเรื่องแล้ว','success'); e.target.reset(); 
+                let m = bootstrap.Modal.getInstance(document.getElementById('formModal')); if (m) m.hide(); 
+            } else { Swal.fire('Error', res.message, 'error'); } 
+        }); 
+    }
+    
+    function submitRating() { 
+        let sc = getVal('sys_rating_val'); if (sc == 0) return Swal.fire('ให้คะแนนด้วยครับ');
+        Swal.fire({ title: 'กำลังส่ง...', didOpen: () => Swal.showLoading() }); 
+        postData({ action: 'saveRating', stars: sc, sysFeedback: getVal('sys_feedback') }, (res) => { 
+            let m = bootstrap.Modal.getInstance(document.getElementById('ratingModal')); if (m) m.hide(); 
+            Swal.fire('ขอบพระคุณ!', 'เสร็จสิ้น', 'success'); setElVal('sys_rating_val', 0); setElVal('sys_feedback', ''); setStar(0); 
+        }); 
+    }
+
+    // 🟢 คำนวณ Dashboard 🟢
+    function refreshTableCalculation() { if (!globalDashboardData) return; renderSummaryTable(globalDashboardData); }
+    function renderSummaryTable(data) {
+        let backendScale = data.hearing.scaleType || "5"; let activeScale = scaleConfigs[backendScale] || scaleConfigs["5"];
+        let stdL = activeScale.labels; let stdC = activeScale.colors;
+        let calcModeEl = document.querySelector('input[name="calcMode"]:checked'); let calcMode = calcModeEl ? calcModeEl.value : 'avg';
+
+        let theadHtml = `<tr><th rowspan="2" class="align-middle">ประเด็นการพัฒนา</th><th colspan="${stdL.length}">ระดับความคิดเห็น: จำนวน (ร้อยละ)</th><th rowspan="2" class="align-middle">สรุปผลภาพรวม</th></tr><tr>`;
+        stdL.forEach(lbl => { theadHtml += `<th>${lbl}</th>`; }); theadHtml += `</tr>`; setElHtml('summaryTableHead', theadHtml);
+
+        let tableHtml = '';
+        h_topics.forEach((topic, idx) => {
+            if (topic && topic.trim() !== "") {
+                let key = "byT" + (idx + 1); let counts = stdL.map(l => data.hearing[key][l] || 0); let total = counts.reduce((a, b) => a + b, 0); let summaryCell = "-";
+                if (total > 0) {
+                    if (calcMode === 'avg') {
+                        let weights = []; if (backendScale === "5") weights = [5, 4, 3, 2, 1]; else if (backendScale === "2") weights = [1, 0];
+                        let sumWeight = 0; counts.forEach((c, i) => { sumWeight += c * weights[i]; }); let avg = sumWeight / total;
+                        let meaning = ""; let color = "#333";
+                        if (backendScale === "5") {
+                            if (avg >= 4.21) { meaning = "เห็นด้วยอย่างยิ่ง"; color = stdC[0]; } else if (avg >= 3.41) { meaning = "เห็นด้วย"; color = stdC[1]; } else if (avg >= 2.61) { meaning = "ไม่แน่ใจ"; color = stdC[2]; } else if (avg >= 1.81) { meaning = "ไม่เห็นด้วย"; color = stdC[3]; } else { meaning = "ไม่เห็นด้วยอย่างยิ่ง"; color = stdC[4]; }
+                        } else { meaning = (avg >= 0.5) ? "เห็นด้วย" : "ไม่เห็นด้วย"; color = (avg >= 0.5) ? stdC[0] : stdC[1]; }
+                        summaryCell = `<span style="color:${color}; font-weight:bold;">${avg.toFixed(2)}<br>(${meaning})</span>`;
+                    } else {
+                        let positiveCount = 0; if (backendScale === "2") positiveCount = counts[0]; else positiveCount = counts[0] + counts[1];
+                        let pct = ((positiveCount / total) * 100).toFixed(1); summaryCell = `<span class="text-success fw-bold">เห็นด้วยรวม<br>${pct}%</span>`;
+                    }
+                }
+                tableHtml += `<tr><td class="text-start fw-bold">${topic}</td>`;
+                counts.forEach(val => { let pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0; tableHtml += `<td>${val} <br><span class="text-muted small">(${pct}%)</span></td>`; });
+                tableHtml += `<td class="align-middle" style="background-color:#f8f9fa;">${summaryCell}</td></tr>`;
+            }
+        }); setElHtml('summaryTableBody', tableHtml);
+        
+        let footnoteText = "";
+        if (calcMode === 'avg') { if (backendScale === "5") footnoteText = "* หมายเหตุ: เกณฑ์การแปลผลค่าเฉลี่ย 4.21-5.00 (เห็นด้วยอย่างยิ่ง), 3.41-4.20 (เห็นด้วย), 2.61-3.40 (ไม่แน่ใจ), 1.81-2.60 (ไม่เห็นด้วย), 1.00-1.80 (ไม่เห็นด้วยอย่างยิ่ง)"; else footnoteText = "* หมายเหตุ: เกณฑ์การแปลผลค่าเฉลี่ย 0.50 ขึ้นไป (เห็นด้วย), ต่ำกว่า 0.50 (ไม่เห็นด้วย)"; } 
+        else { if (backendScale === "5") footnoteText = "* หมายเหตุ: สรุปผลภาพรวมแบบเชิงบวก (Positive %) คำนวณจากสัดส่วนผู้ที่ตอบ 'เห็นด้วยอย่างยิ่ง' และ 'เห็นด้วย' รวมกัน"; else footnoteText = "* หมายเหตุ: สรุปผลภาพรวมแบบเชิงบวก (Positive %) คำนวณจากสัดส่วนผู้ที่ตอบ 'เห็นด้วย'"; }
+        setElText('criteriaFootnote', footnoteText);
+    }
+
+    function generateColors(count) {
+        let colors = ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0', '#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#34495e'];
+        while(colors.length < count) { colors = colors.concat(colors); } return colors.slice(0, count);
+    }
+
+    function toggleChartType(section, type) {
+        chartDataStore[section].type = type;
+        if (section === 'issues') {
+            let colors = type === 'doughnut' ? generateColors(chartDataStore.issues.labels.length) : '#e91e63';
+            renderChart('chartIssuesDistrict', type, chartDataStore.issues.labels, chartDataStore.issues.data, 'จำนวนคน (เรื่องแจ้ง)', colors);
+        } else if (section === 'hearing') {
+            let colors = type === 'doughnut' ? generateColors(chartDataStore.hearing.labels.length) : '#0d6efd';
+            renderChart('chartHearingDistrict', type, chartDataStore.hearing.labels, chartDataStore.hearing.data, 'จำนวนคน (รับฟังความเห็น)', colors);
+        }
+    }
+
+    function loadDashboard() {
+       Swal.fire({ title: 'กำลังดึงข้อมูล...', didOpen: () => Swal.showLoading() });
+       fetch(SCRIPT_URL + '?action=getDashboardStats').then(r => r.json()).then(data => {
+           Swal.close(); globalDashboardData = data; 
+           let btnOS = document.getElementById('btnOpenSheet'); if (btnOS) btnOS.href = data.sheetUrl; 
+           setElText('stat_issues_total', data.issues.total); setElText('stat_hearing_total', data.hearing.total);
+           
+           renderChart('chartIssues', 'bar', Object.keys(data.issues.byCat), Object.values(data.issues.byCat), 'เรื่องแจ้ง', '#e91e63'); 
+           renderChart('chartSector', 'pie', Object.keys(data.hearing.bySector), Object.values(data.hearing.bySector), 'ภาคส่วน', ['#f1c40f','#e67e22','#e74c3c','#9b59b6', '#34495e']); 
+           renderChart('chartVision', 'doughnut', Object.keys(data.hearing.byVision), Object.values(data.hearing.byVision), 'วิสัยทัศน์', ['#2ecc71','#f1c40f','#e74c3c']); 
+           renderChart('chartPriority', 'bar', Object.keys(data.hearing.byPriority), Object.values(data.hearing.byPriority), 'ความสำคัญ', '#34495e');
+           
+           // กราฟอำเภอฝั่งสีชมพู
+           let issDistLabels = chiangMaiDistricts;
+           let issDistValues = issDistLabels.map(d => data.issues.byDistrict[d] || 0);
+           chartDataStore.issues.labels = issDistLabels; chartDataStore.issues.data = issDistValues;
+           toggleChartType('issues', 'doughnut'); 
+
+           // กราฟอำเภอฝั่งสีเหลือง
+           let hDistLabels = chiangMaiDistricts;
+           let hDistValues = hDistLabels.map(d => data.hearing.byDistrict[d] || 0);
+           chartDataStore.hearing.labels = hDistLabels; chartDataStore.hearing.data = hDistValues;
+           toggleChartType('hearing', 'doughnut'); 
+
+           let backendScale = data.hearing.scaleType || "5"; let activeScale = scaleConfigs[backendScale] || scaleConfigs["5"]; let stdL = activeScale.labels; let stdC = activeScale.colors;
+           setElText('lbl_dash_scale_info', "(ระบบแสดงผลแบบ " + backendScale + " ระดับ)");
+           
+           let summaryData = data.hearing.summary; let summaryVals = stdL.map(l => summaryData[l] || 0);
+           renderChart('chartSummary', 'doughnut', stdL, summaryVals, 'ภาพรวม', stdC);
+           renderSummaryTable(data);
+
+           let getD = (obj) => stdL.map(l => obj[l] || 0);
+           for (let i = 1; i <= 6; i++) {
+               let colDiv = document.getElementById('col_chartT' + i);
+               if (h_topics[i-1] !== "") { setElText('lbl_chartT' + i, h_topics[i-1]); renderChart('chartT' + i, 'doughnut', stdL, getD(data.hearing['byT'+i]), '', stdC); if (colDiv) colDiv.style.display = 'block'; } 
+               else { if (colDiv) colDiv.style.display = 'none'; }
+           }
+       }).catch(e => { console.error("Dashboard Load Error:", e); Swal.fire('Error', 'ไม่สามารถโหลดแดชบอร์ดได้', 'error'); });
+    }
+
+    function renderChart(canvasId, type, labels, data, label, colors) {
+       let chartKey = canvasId.toLowerCase(); if (charts[chartKey]) charts[chartKey].destroy(); 
+       let ctx = document.getElementById(canvasId); if (!ctx) return; ctx = ctx.getContext('2d');
+       let config = { type: type, data: { labels: labels, datasets: [{ label: label, data: data, backgroundColor: colors, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: (type !== 'bar'), position: 'bottom' }, tooltip: { callbacks: { label: function(context) { let value = context.parsed.y !== undefined ? context.parsed.y : context.parsed; let dataset = context.chart.data.datasets[context.datasetIndex]; let total = dataset.data.reduce((a, b) => Number(a) + Number(b), 0); let percentage = total > 0 ? ((value * 100) / total).toFixed(1) + '%' : '0%'; let labelText = context.chart.config.type === 'bar' ? (context.dataset.label ? context.dataset.label + ': ' : '') : (context.label ? context.label + ' ' : ''); return [ labelText + value + ' คน', 'คิดเป็น ' + percentage ]; } } } } } };
+       charts[chartKey] = new Chart(ctx, config);
+    }
+  </script>
+</body>
+</html>
